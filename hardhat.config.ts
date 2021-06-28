@@ -56,7 +56,7 @@ const config: HardhatUserConfig = {
       url: process.env.PROVIDER,
       chainId: Number(process.env.CHAINID),
       accounts: {
-        mnemonic: process.env.MNEMONIC,
+        mnemonic: (process.env.MNEMONIC) ? process.env.MNEMONIC : '',
         path: process.env.HD_PATH,
         initialIndex: Number(process.env.HD_INITIAL),
         count: Number(process.env.HD_COUNT),
@@ -65,6 +65,14 @@ const config: HardhatUserConfig = {
       gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : "auto",
       gasMultiplier: (process.env.GAS_MULTIPLIER) ? Number(process.env.GAS_MULTIPLIER) : 1
     },
+    env_network_private_key: {
+      url: process.env.PROVIDER,
+      chainId: Number(process.env.CHAINID),
+      accounts: ['0x' + process.env.PRIVATE_KEY],
+      gas: (process.env.GAS) ? Number(process.env.GAS) : "auto",
+      gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : "auto",
+      gasMultiplier: (process.env.GAS_MULTIPLIER) ? Number(process.env.GAS_MULTIPLIER) : 1
+    }
   },
   paths: {
     artifacts: './artifacts',

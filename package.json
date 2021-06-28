@@ -32,7 +32,8 @@
     "test:forking": "FORKING=true hardhat test",
     "typechain": "hardhat typechain",
     "etherscan:verify": "hardhat verify",
-    "deploy-from-env": "hardhat clean && hardhat run --network env_network scripts/deploy.ts"
+    "deploy-from-env": "hardhat clean && hardhat run --network env_network scripts/deploy.ts",
+    "deploy-from-env-key": "hardhat clean && hardhat run --network env_network_private_key scripts/deploy.ts"
   },
   "dependencies": {
     "@openzeppelin/contracts": "v4.0.0"

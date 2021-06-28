@@ -86,8 +86,14 @@ $ yarn coverage
 Use the deploy-from-env script to deploy to the Chain specified in .env (defaults to CHAINID 42 which is Kovan)
 Deploys default pool WETH/DAI 30%/70%
 
+Using MNEMONIC in .env
 ```sh
 $ yarn deploy-from-env
+```
+
+Using PRIVATE_KEY in .env
+```sh
+$ yarn deploy-from-env-key
 ```
 Note the EPool address which is used in subsequent steps
 

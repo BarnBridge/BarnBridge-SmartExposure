@@ -7,6 +7,7 @@ declare global {
         FORKING: string;
         PROVIDER_FORKING: string;
         MNEMONIC: string;
+        PRIVATE_KEY: string;
         ETHERSCAN: string;
         BLOCKNUMBER: string;
         GAS: string;
