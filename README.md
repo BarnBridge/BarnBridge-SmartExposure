@@ -84,13 +84,27 @@ $ yarn coverage
 
 ## Deploying
 Use the deploy-from-env script to deploy to the Chain specified in .env (defaults to CHAINID 42 which is Kovan)
+Deploys default pool WETH/DAI 30%/70%
 
 ```sh
 $ yarn deploy-from-env
 ```
+Note the EPool address which is used in subsequent steps
 
 ### EPool
-Adding a tranche to a EPool
+
+Adding a tranche to a EPool with percentage of TokenA (must be less than 100).
+EToken and EToken Symbol Names are arbitrary
+
+```sh
+$ yarn hardhat addTrancheAsPercentage --network NETWORK \
+  --e-pool E_POOL_ADDRESS \
+  --target-ratio-percentage TARGET_RATIO_PERCENTAGE
+  --e-token-name ETOKEN_NAME
+  --e-token-symbol ETOKEN_SYMBOL
+```
+
+Adding a tranche to a EPool with exact ratio (TokenA/TokenB * 10^18)
 
 ```sh
 $ yarn hardhat addTranche --network NETWORK \

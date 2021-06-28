@@ -3,6 +3,7 @@ export const CLEAN: string = 'clean';
 
 // EPool
 export const ADD_TRANCHE: string = 'addTranche';
+export const ADD_TRANCHE_AS_PERCENTAGE: string = 'addTrancheAsPercentage';
 export const REBALANCE: string = 'rebalance';
 export const GET_STATE: string = 'getState';
 export const ISSUE_EXACT: string = 'issueExact';

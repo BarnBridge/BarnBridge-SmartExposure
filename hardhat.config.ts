@@ -17,6 +17,7 @@ import './tasks/accounts';
 import './tasks/contracts/EPool/getState';
 import './tasks/contracts/EPool/rebalance';
 import './tasks/contracts/EPool/addTranche';
+import './tasks/contracts/EPool/addTrancheAsPercentage';
 import './tasks/contracts/EPool/issueExact';
 import './tasks/contracts/EPool/redeemExact';
 import './tasks/contracts/EPool/setFeeRate';
