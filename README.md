@@ -97,7 +97,7 @@ Adding a tranche to a EPool with percentage of TokenA (must be less than 100).
 EToken and EToken Symbol Names are arbitrary
 
 ```sh
-$ yarn hardhat addTrancheAsPercentage --network NETWORK \
+$ yarn hardhat addTrancheAsPercentage --network env_network \
   --e-pool E_POOL_ADDRESS \
   --target-ratio-percentage TARGET_RATIO_PERCENTAGE
   --e-token-name ETOKEN_NAME
@@ -107,7 +107,7 @@ $ yarn hardhat addTrancheAsPercentage --network NETWORK \
 Adding a tranche to a EPool with exact ratio (TokenA/TokenB * 10^18)
 
 ```sh
-$ yarn hardhat addTranche --network NETWORK \
+$ yarn hardhat addTranche --network env_network \
   --e-pool E_POOL_ADDRESS \
   --target-ratio TARGET_RATIO
   --e-token-name ETOKEN_NAME
@@ -117,14 +117,14 @@ $ yarn hardhat addTranche --network NETWORK \
 Get the state of a EPool
 
 ```sh
-$ yarn hardhat getState --network NETWORK \
+$ yarn hardhat getState --network env_network \
   --e-pool E_POOL_ADDRESS \
   --e-pool-helper E_POOL_HELPER_ADDRESS
 ```
 
 Issue amount of EToken
 ```sh
-$ yarn hardhat issueExact --network NETWORK \
+$ yarn hardhat issueExact --network env_network \
   --e-pool E_POOL_ADDRESS \
   --e-pool-helper E_POOL_HELPER_ADDRESS
   --e-token E_TOKEN_ADDRESS \
@@ -134,7 +134,7 @@ $ yarn hardhat issueExact --network NETWORK \
 Redeem amount of EToken
 
 ```sh
-$ yarn hardhat redeemExact --network NETWORK \
+$ yarn hardhat redeemExact --network env_network \
   --e-pool E_POOL_ADDRESS \
   --e-pool-helper E_POOL_HELPER_ADDRESS
   --e-token E_TOKEN_ADDRESS \
@@ -144,21 +144,21 @@ $ yarn hardhat redeemExact --network NETWORK \
 Set redemption feeRate for EPool
 
 ```sh
-$ yarn hardhat setFeeRate --network NETWORK \
+$ yarn hardhat setFeeRate --network env_network \
   --e-pool E_POOL_ADDRESS \
   --fee-rate FEE_RATE
 ```
 
 Update min. ratio divergence required to perform rebalancing
 ```sh
-$ yarn hardhat setMinRDiv --network NETWORK \
+$ yarn hardhat setMinRDiv --network env_network \
   --e-pool EPool \
   --min-r-div MIN_R_DIV
 ```
 
 Update interval required to perform rebalancing
 ```sh
-$ yarn hardhat setRebalanceInterval --network NETWORK \
+$ yarn hardhat setRebalanceInterval --network env_network \
   --e-pool EPool \
   --interval REBALANCE_INTERVAL
 ```
@@ -167,7 +167,7 @@ $ yarn hardhat setRebalanceInterval --network NETWORK \
 Issue amount of EToken for max. TokenA via the periphery
 
 ```sh
-$ yarn hardhat issueForMaxTokenA --network NETWORK \
+$ yarn hardhat issueForMaxTokenA --network env_network \
   --e-pool E_POOL_ADDRESS \
   --e-pool-helper E_POOL_HELPER_ADDRESS \
   --e-pool-periphery E_POOL_PERIPHERY_ADDRESS \
@@ -179,7 +179,7 @@ $ yarn hardhat issueForMaxTokenA --network NETWORK \
 Issue amount of EToken for max. TokenB via the periphery
 
 ```sh
-$ yarn hardhat issueForMaxTokenB --network NETWORK \
+$ yarn hardhat issueForMaxTokenB --network env_network \
   --e-pool E_POOL_ADDRESS \
   --e-pool-helper E_POOL_HELPER_ADDRESS \
   --e-pool-periphery E_POOL_PERIPHERY_ADDRESS \
@@ -191,7 +191,7 @@ $ yarn hardhat issueForMaxTokenB --network NETWORK \
 Rebalance a EPool tranche via flash swap
 
 ```sh
-$ yarn hardhat rebalanceWithFlashSwap --network NETWORK \
+$ yarn hardhat rebalanceWithFlashSwap --network env_network \
   --e-pool E_POOL_ADDRESS \
   --e-pool-helper E_POOL_HELPER_ADDRESS \
   --e-pool-periphery E_POOL_PERIPHERY_ADDRESS
@@ -200,7 +200,7 @@ $ yarn hardhat rebalanceWithFlashSwap --network NETWORK \
 Redeem amount of EToken for min. TokenA via the periphery
 
 ```sh
-$ yarn hardhat redeemForMinTokenA --network NETWORK \
+$ yarn hardhat redeemForMinTokenA --network env_network \
   --e-pool E_POOL_ADDRESS \
   --e-pool-helper E_POOL_HELPER_ADDRESS \
   --e-pool-periphery E_POOL_PERIPHERY_ADDRESS \
@@ -212,7 +212,7 @@ $ yarn hardhat redeemForMinTokenA --network NETWORK \
 Redeem amount of EToken for min. TokenB via the periphery
 
 ```sh
-$ yarn hardhat redeemForMinTokenB --network NETWORK \
+$ yarn hardhat redeemForMinTokenB --network env_network \
   --e-pool E_POOL_ADDRESS \
   --e-pool-helper E_POOL_HELPER_ADDRESS \
   --e-pool-periphery E_POOL_PERIPHERY_ADDRESS \
@@ -225,15 +225,15 @@ $ yarn hardhat redeemForMinTokenB --network NETWORK \
 
 Update min. deltaA required for keepers to perform rebalancing
 ```sh
-$ yarn hardhat setKeeperMinRDiv --network NETWORK \
-  --keeper-network-adapter KEEPER_NETWORK_ADAPTER \
+$ yarn hardhat setKeeperMinRDiv --network env_network \
+  --keeper-network-adapter KEEPER_env_network_ADAPTER \
   --min-r-div MIN_R_DIV
 ```
 
 Update interval required for keepers to perform rebalancing
 ```sh
-$ yarn hardhat setKeeperRebalanceInterval --network NETWORK \
-  --keeper-network-adapter KEEPER_NETWORK_ADAPTER \
+$ yarn hardhat setKeeperRebalanceInterval --network env_network \
+  --keeper-network-adapter KEEPER_env_network_ADAPTER \
   --interval REBALANCE_INTERVAL
 ```
 
@@ -241,7 +241,7 @@ $ yarn hardhat setKeeperRebalanceInterval --network NETWORK \
 Add subsidy to compensate keepers for pot. losses caused
 by price deviation between oracle and exchange prices
 ```sh
-$ yarn hardhat addSubsidy --network NETWORK \
+$ yarn hardhat addSubsidy --network env_network \
   --keeper-subsidy-pool KEEPER_SUBSIDY_POOL \
   --token TOKEN \
   --amount AMOUNT
