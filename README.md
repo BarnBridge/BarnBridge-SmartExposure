@@ -226,14 +226,14 @@ $ yarn hardhat redeemForMinTokenB --network env_network \
 Update min. deltaA required for keepers to perform rebalancing
 ```sh
 $ yarn hardhat setKeeperMinRDiv --network env_network \
-  --keeper-network-adapter KEEPER_env_network_ADAPTER \
+  --keeper-network-adapter KEEPER_NETWORK_ADAPTER \
   --min-r-div MIN_R_DIV
 ```
 
 Update interval required for keepers to perform rebalancing
 ```sh
 $ yarn hardhat setKeeperRebalanceInterval --network env_network \
-  --keeper-network-adapter KEEPER_env_network_ADAPTER \
+  --keeper-network-adapter KEEPER_NETWORK_ADAPTER \
   --interval REBALANCE_INTERVAL
 ```
 
