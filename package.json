@@ -29,7 +29,7 @@
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts .",
     "tenderly:push": "hardhat tenderly:push",
     "test": "hardhat test",
-    "test:forking": "FORKING=true hardhat test",
+    "test:forking": "FORKING=true CHAINID=42 hardhat test",
     "typechain": "hardhat typechain",
     "etherscan:verify": "hardhat verify",
     "deploy-from-env": "hardhat clean && hardhat run --network env_network scripts/deploy.ts",

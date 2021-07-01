@@ -462,6 +462,55 @@ describe('EPoolLibrary', function () {
           ]
         }
       },
+      // underflow by rounding error - in totalDeltaB
+      {
+        decA: 18,
+        decB: 6,
+        sFactorA: toUnit('1', 18),
+        sFactorB: toUnit('1', 6),
+        tranches: [
+          { reserveA: ethers.BigNumber.from('3811729104010212'), reserveB: ethers.BigNumber.from('8067834'), targetRatio: toUnit(String(50/50), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 },
+          { reserveA: ethers.BigNumber.from('2082532324155799'), reserveB: ethers.BigNumber.from('13369999'), targetRatio: toUnit(String(25/75), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 },
+          { reserveA: ethers.BigNumber.from('11183284412251486'), reserveB: ethers.BigNumber.from('7893085'), targetRatio: toUnit(String(75/25), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 }
+        ],
+        rate: ethers.BigNumber.from('2122977615747369595606'),
+        feeRate: ethers.BigNumber.from('5000000000000000'),
+        results: {
+          delta: { deltaA: ethers.BigNumber.from('0'), deltaB: ethers.BigNumber.from('0'), rChange: 0, rDiv: ethers.BigNumber.from('0') },
+          tranches: [
+            {
+              currentRatio: ethers.BigNumber.from('1003022070744943096'),
+              trancheDelta: { deltaA: ethers.BigNumber.from('5742303857941'), deltaB: ethers.BigNumber.from('10614'), rChange: 0 },
+              eTokenForTokenATokenB: 0,
+              tokenATokenBForEToken: { amountA: 0, amountB: 0 },
+              tokenAForTokenB: 0,
+              tokenBForTokenA: 0,
+              tokenATokenBForTokenA: { amountA: 0, amountB: 0 },
+              tokenATokenBForTokenB: { amountA: 0, amountB: 0 }
+            },
+            {
+              currentRatio: ethers.BigNumber.from('330678372395772534'),
+              trancheDelta: { deltaA: ethers.BigNumber.from('12540225866110'), deltaB: ethers.BigNumber.from('25475'), rChange: 1 },
+              eTokenForTokenATokenB: 0,
+              tokenATokenBForEToken: { amountA: 0, amountB: 0 },
+              tokenAForTokenB: 0,
+              tokenBForTokenA: 0,
+              tokenATokenBForTokenA: { amountA: 0, amountB: 0 },
+              tokenATokenBForTokenB: { amountA: 0, amountB: 0 }
+            },
+            {
+              currentRatio: ethers.BigNumber.from('3007931940140817345'),
+              trancheDelta: { deltaA: ethers.BigNumber.from('7372602198203'), deltaB: ethers.BigNumber.from('14860'), rChange: 0 },
+              eTokenForTokenATokenB: 0,
+              tokenATokenBForEToken: { amountA: 0, amountB: 0 },
+              tokenAForTokenB: 0,
+              tokenBForTokenA: 0,
+              tokenATokenBForTokenA: { amountA: 0, amountB: 0 },
+              tokenATokenBForTokenB: { amountA: 0, amountB: 0 }
+            }
+          ]
+        }
+      }
     ];
   });
 
@@ -559,22 +608,20 @@ describe('EPoolLibrary', function () {
       for (const s of this.scenarios) {
         this.decA = s.decA;
         this.decB = s.decB;
-        for (let i = 0; i < s.tranches.length; i++) {
-          const result = s.results.delta;
-          const delta = await this.delta(s.tranches, s.rate, s.sFactorA, s.sFactorB);
-          assert(
-            delta.deltaA.eq(result.deltaA)
-            && delta.deltaB.eq(result.deltaB)
-            && delta.rChange.eq(result.rChange)
-            && delta.rDiv.eq(result.rDiv),
-            `
-            expected deltaA: ${result.deltaA.toString()}, actual deltaA: ${delta.deltaA.toString()}
-            expected deltaB: ${result.deltaB.toString()}, actual deltaB: ${delta.deltaB.toString()}
-            expected rChange: ${result.rChange.toString()}, actual rChange: ${delta.rChange.toString()}
-            expected rDiv: ${result.rDiv.toString()}, actual rDiv: ${delta.rDiv.toString()}
-            `
-          );
-        }
+        const result = s.results.delta;
+        const delta = await this.delta(s.tranches, s.rate, s.sFactorA, s.sFactorB);
+        assert(
+          delta.deltaA.eq(result.deltaA)
+          && delta.deltaB.eq(result.deltaB)
+          && delta.rChange.eq(result.rChange)
+          && delta.rDiv.eq(result.rDiv),
+          `
+          expected deltaA: ${result.deltaA.toString()}, actual deltaA: ${delta.deltaA.toString()}
+          expected deltaB: ${result.deltaB.toString()}, actual deltaB: ${delta.deltaB.toString()}
+          expected rChange: ${result.rChange.toString()}, actual rChange: ${delta.rChange.toString()}
+          expected rDiv: ${result.rDiv.toString()}, actual rDiv: ${delta.rDiv.toString()}
+          `
+        );
       }
     });
   });

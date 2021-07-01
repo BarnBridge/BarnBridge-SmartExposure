@@ -75,10 +75,11 @@ library EPoolLibrary {
             (totalDeltaA, totalDeltaB) = (_rChange == 0)
                 ? (totalDeltaA - int256(_deltaA), totalDeltaB + int256(_deltaB))
                 : (totalDeltaA + int256(_deltaA), totalDeltaB - int256(_deltaB));
+
         }
-        if (totalDeltaA > 0)  {
+        if (totalDeltaA > 0 && totalDeltaB < 0)  {
             (deltaA, deltaB, rChange) = (uint256(totalDeltaA), uint256(-totalDeltaB), 1);
-        } else {
+        } else if (totalDeltaA < 0 && totalDeltaB > 0) {
             (deltaA, deltaB, rChange) = (uint256(-totalDeltaA), uint256(totalDeltaB), 0);
         }
         rDiv = (totalReserveA == 0) ? 0 : deltaA * EPoolLibrary.sFactorI / totalReserveA;
