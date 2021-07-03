@@ -195,23 +195,23 @@ The table below gives an overview of all functions in the SmartExposure system u
 
 Furthermore, the controller contract exposes a function `setPausedIssuance` that uses the `onlyDaoOrGuardian` modifier which allows the issuance of new `EToken` for all exposure tranches controlled by this controller contract to be paused. Note that only the the issuance of new `EToken` is paused and not the redemption of outstanding tokens such that users always have control over their funds.
 
-| Contract             | Function                | Effect | Modifier            |
-| -------------------- | ----------------------- | ------ | ------------------- |
-| EPool                | addTranche              | Adds a new tranche to an existing `EPool` | `onlyDao`           |
-|                      | updateAggregator        | Sets a new `aggregator` providing `TokenA/TokenB` prices | `onlyDao`           |
-|                      | setFees                 | Sets a new `feeRate` | `onlyDao`           |
-|                      | interval                | Sets the minimum time period between any two `rebalance` calls | `onlyDao`           |
-|                      | minRDiv               | Sets the minimum deviation of `ratio` from `targetRatio` between any two `rebalance` calls | `onlyDao`           |
-| EPoolPeriphery       | updateEPoolApproval     | Sets the `EPool` approved for interactions | `onlyDaoOrGuardian` |
-|                      | setMaxFlashSwapSlippage | Sets `maxFlashSwapSlippage` used in Uniswap V2 flash swaps | `onlyDaoOrGuardian` |
-| KeeperSubsidyPool    | setBeneficiary          | Sets the beneficiary of the funds in the `KeeperSubsidyPool` | `onlyDaoOrGuardian` |
-| KeeperNetworkAdapter | updateEPool             | Sets the `EPool` on which upkeep tasks are performed | `onlyDaoOrGuardian` |
-|                      | updateEPoolPeriphery    | Sets the `EPoolPeriphery` on which `rebalanceWithFlashSwap` is performed | `onlyDaoOrGuardian` |
-|                      | updateMinRDiv         | Sets the minimum deviation of `ratio` from `targetRatio` between any two upkeep tasks | `onlyDaoOrGuardian` |
-| Controller           | setDao                  | Sets the DAO address | `onlyDao`           |
-|                      | setGuardian             | Sets the Guardian address | `onlyDao`           |
-|                      | setFeesOwner            | Sets the `feeOwner` address | `onlyDao`           |
-|                      | setPausedIssuance       | Pauses issuance of new `EToken` | `onlyDaoOrGuardian` |
+| Contract             | Function                | Effect                                                                                                     | Modifier            |
+| -------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------- |
+| EPool                | addTranche              | Adds a new tranche to an existing `EPool`                                                                  | `onlyDao`           |
+|                      | updateAggregator        | Sets a new `aggregator` providing `TokenA/TokenB` prices                                                   | `onlyDao`           |
+|                      | setFees                 | Sets a new `feeRate` (in % scaled by 1e18)                                                                 | `onlyDao`           |
+|                      | interval                | Sets the min. time period between any two `rebalance` calls (in seconds)                                   | `onlyDao`           |
+|                      | minRDiv                 | Sets min. rel. change of deltaA between any two `rebalance` calls (in % scaled by 1e18)                    | `onlyDao`           |
+| EPoolPeriphery       | updateEPoolApproval     | Sets the `EPool` approved for interactions                                                                 | `onlyDaoOrGuardian` |
+|                      | setMaxFlashSwapSlippage | Sets `maxFlashSwapSlippage` used in Uniswap V2 flash swaps (in % scaled by 1e18, with 100% := no slippage) | `onlyDaoOrGuardian` |
+| KeeperSubsidyPool    | setBeneficiary          | Sets the beneficiary of the funds in the `KeeperSubsidyPool`                                               | `onlyDaoOrGuardian` |
+| KeeperNetworkAdapter | updateEPool             | Sets the `EPool` on which upkeep tasks are performed                                                       | `onlyDaoOrGuardian` |
+|                      | updateEPoolPeriphery    | Sets the `EPoolPeriphery` on which `rebalanceWithFlashSwap` is performed                                   | `onlyDaoOrGuardian` |
+|                      | updateMinRDiv           | Sets min. rel. change of deltaA between any two `rebalance` calls (in % scaled by 1e18)                    | `onlyDaoOrGuardian` |
+| Controller           | setDao                  | Sets the DAO address                                                                                       | `onlyDao`           |
+|                      | setGuardian             | Sets the Guardian address                                                                                  | `onlyDao`           |
+|                      | setFeesOwner            | Sets the `feeOwner` address                                                                                | `onlyDao`           |
+|                      | setPausedIssuance       | Pauses issuance of new `EToken`                                                                            | `onlyDaoOrGuardian` |
 
 # Token Requirements
 There are some requirements that two tokens to be used as the underlying token pair must fulfill.

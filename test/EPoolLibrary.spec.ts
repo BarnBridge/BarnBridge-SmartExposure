@@ -462,6 +462,33 @@ describe('EPoolLibrary', function () {
           ]
         }
       },
+      // non-zero, zero deltaA, deltaB should return 0 for both
+      {
+        decA: 18,
+        decB: 6,
+        sFactorA: toUnit('1', 18),
+        sFactorB: toUnit('1', 6),
+        tranches: [
+          { reserveA: ethers.BigNumber.from('100000000000000009'), reserveB: ethers.BigNumber.from('100000'), targetRatio: toUnit(String(50/50), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 }
+        ],
+        rate: toUnit('1', 18),
+        feeRate: toUnit('1', 18),
+        results: {
+          delta: { deltaA: ethers.BigNumber.from('0'), deltaB: ethers.BigNumber.from('0'), rChange: 0, rDiv: ethers.BigNumber.from('0') },
+          tranches: [
+            {
+              currentRatio: ethers.BigNumber.from('1000000000000000090'),
+              trancheDelta: { deltaA: ethers.BigNumber.from('0'), deltaB: ethers.BigNumber.from('0'), rChange: 0 },
+              eTokenForTokenATokenB: 0,
+              tokenATokenBForEToken: { amountA: 0, amountB: 0 },
+              tokenAForTokenB: 0,
+              tokenBForTokenA: 0,
+              tokenATokenBForTokenA: { amountA: 0, amountB: 0 },
+              tokenATokenBForTokenB: { amountA: 0, amountB: 0 }
+            },
+          ]
+        }
+      },
       // underflow by rounding error - in totalDeltaB
       {
         decA: 18,
