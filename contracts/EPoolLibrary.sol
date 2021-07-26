@@ -11,8 +11,6 @@ import "./interfaces/IEPool.sol";
 import "./utils/TokenUtils.sol";
 import "./utils/Math.sol";
 
-import "hardhat/console.sol";
-
 library EPoolLibrary {
     using TokenUtils for IERC20;
 

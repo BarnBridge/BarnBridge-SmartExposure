@@ -17,8 +17,6 @@ import "./utils/TokenUtils.sol";
 
 import "./EPoolLibrary.sol";
 
-import "hardhat/console.sol";
-
 contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
     using SafeERC20 for IERC20;
     using TokenUtils for IERC20;
