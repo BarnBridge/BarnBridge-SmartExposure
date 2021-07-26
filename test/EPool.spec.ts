@@ -204,7 +204,7 @@ describe('EPool', function () {
 
     describe('#setMinRDiv', function () {
       it('should set minRDiv if msg.sender is the dao', async function () {
-        const minRDiv = parseUnits('0.069', this.decA);
+        const minRDiv = parseUnits('0.11', 18);
         await expect(
           this.ep.connect(this.signers.dao).setMinRDiv(minRDiv)
         ).to.emit(this.ep, 'SetMinRDiv').withArgs(minRDiv);
@@ -255,7 +255,7 @@ describe('EPool', function () {
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced))
         const delta = await this.eph.connect(this.signers.user).delta(this.ep.address);
-        assert(this.roundEqual(delta.deltaA.mul(this.sFactorI).div(tranche.reserveA), delta.rDiv));
+        assert(this.roundEqual(this.sFactorI.sub(currentRatioUnbalanced.mul(this.sFactorI).div(tranche.targetRatio)).abs(), delta.rDiv));
         const receipt = await (await this.ep.connect(this.signers.user).rebalance(this.sFactorI)).wait();
         const RebalanceEvent = new ethers.utils.Interface([this.ep.interface.getEvent('RebalancedTranches')]);
         const event = receipt.events?.find((event: any) => {

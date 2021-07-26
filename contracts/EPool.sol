@@ -225,13 +225,13 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
 
     function _trancheDelta(
         Tranche storage t, uint256 fracDelta
-    ) internal view returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
+    ) internal view returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
         uint256 rate = _rate();
-        (uint256 _deltaA, uint256 _deltaB, uint256 _rChange) = EPoolLibrary.trancheDelta(
+        (uint256 _deltaA, uint256 _deltaB, uint256 _rChange, uint256 _rDiv) = EPoolLibrary.trancheDelta(
             t, rate, sFactorA, sFactorB
         );
-        (deltaA, deltaB, rChange) = (
-            fracDelta * _deltaA / EPoolLibrary.sFactorI, fracDelta * _deltaB / EPoolLibrary.sFactorI, _rChange
+        (deltaA, deltaB, rChange, rDiv) = (
+            fracDelta * _deltaA / EPoolLibrary.sFactorI, fracDelta * _deltaB / EPoolLibrary.sFactorI, _rChange, _rDiv
         );
     }
 
@@ -242,13 +242,11 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
         uint256 fracDelta
     ) internal returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
         require(fracDelta <= EPoolLibrary.sFactorI, "EPool: fracDelta > 1.0");
-        uint256 totalReserveA;
         int256 totalDeltaA;
         int256 totalDeltaB;
         for (uint256 i = 0; i < tranchesByIndex.length; i++) {
             Tranche storage t = tranches[tranchesByIndex[i]];
-            totalReserveA += t.reserveA;
-            (uint256 _deltaA, uint256 _deltaB, uint256 _rChange) = _trancheDelta(t, fracDelta);
+            (uint256 _deltaA, uint256 _deltaB, uint256 _rChange, uint256 _rDiv) = _trancheDelta(t, fracDelta);
             if (_rChange == 0) {
                 (t.reserveA, t.reserveB) = (t.reserveA - _deltaA, t.reserveB + _deltaB);
                 (totalDeltaA, totalDeltaB) = (totalDeltaA - int256(_deltaA), totalDeltaB + int256(_deltaB));
@@ -256,13 +254,13 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
                 (t.reserveA, t.reserveB) = (t.reserveA + _deltaA, t.reserveB - _deltaB);
                 (totalDeltaA, totalDeltaB) = (totalDeltaA + int256(_deltaA), totalDeltaB - int256(_deltaB));
             }
+            if (_rDiv > rDiv) rDiv = _rDiv;
         }
         if (totalDeltaA > 0 && totalDeltaB < 0)  {
             (deltaA, deltaB, rChange) = (uint256(totalDeltaA), uint256(-totalDeltaB), 1);
         } else if (totalDeltaA < 0 && totalDeltaB > 0) {
             (deltaA, deltaB, rChange) = (uint256(-totalDeltaA), uint256(totalDeltaB), 0);
         }
-        rDiv = (totalReserveA == 0) ? 0 : deltaA * EPoolLibrary.sFactorI / totalReserveA;
         emit RebalancedTranches(deltaA, deltaB, rChange, rDiv);
     }
 

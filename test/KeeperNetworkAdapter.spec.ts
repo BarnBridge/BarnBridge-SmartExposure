@@ -201,8 +201,7 @@ describe('KeeperNetworkAdapter', function () {
       );
 
       // set keeper network adapter
-      // this.keeperRebalanceMinRDiv = parseUnits('0.00005', this.decA);
-      this.keeperRebalanceMinRDiv = parseUnits('0.005', this.decA);
+      this.keeperRebalanceMinRDiv = parseUnits('0.02', this.decA);
       await this.kna.connect(this.signers.dao).setKeeperRebalanceMinRDiv(this.keeperRebalanceMinRDiv);
       await this.kna.connect(this.signers.dao).setEPool(this.ep.address);
       await this.kna.connect(this.signers.dao).setEPoolHelper(this.eph.address);
