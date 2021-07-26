@@ -42,6 +42,8 @@ library EPoolLibrary {
      * currentRatio < targetRatio: add TokenA liquidity and release TokenB liquidity
      * deltaA := abs(t.reserveA, (t.reserveB / rate * t.targetRatio)) / (1 + t.targetRatio)
      * deltaB := deltaA * rate
+     * rChange := 1 if currentRatio < targetRatio, 2 if currentRatio >= targetRatio
+     * rDiv := 1 - (currentRatio / targetRatio)
      */
     function trancheDelta(
         IEPool.Tranche memory t,
@@ -53,7 +55,9 @@ library EPoolLibrary {
         if (ratio < t.targetRatio) {
             (rChange, rDiv) = (1, sFactorI - (ratio * sFactorI / t.targetRatio));
         } else {
-            (rChange, rDiv) = (0, (ratio == type(uint256).max) ? sFactorI : (ratio * sFactorI / t.targetRatio) - sFactorI);
+            (rChange, rDiv) = (
+                0, (ratio == type(uint256).max) ? sFactorI : (ratio * sFactorI / t.targetRatio) - sFactorI
+            );
         }
         deltaA = (
             Math.abs(t.reserveA, tokenAForTokenB(t.reserveB, t.targetRatio, rate, sFactorA, sFactorB)) * sFactorA

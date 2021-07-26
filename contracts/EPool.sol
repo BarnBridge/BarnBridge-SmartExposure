@@ -273,7 +273,7 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
      * @return deltaA Rebalanced delta of reserveA
      * @return deltaB Rebalanced delta of reserveB
      * @return rChange 0 for deltaA <= 0 and deltaB >= 0, 1 for deltaA > 0 and deltaB < 0 (trancheDelta method)
-     * @return rDiv Deviation from target in percentage (1e18)
+     * @return rDiv Max. ratio deviation from target ratio over all tranches
      */
     function rebalance(
         uint256 fracDelta
