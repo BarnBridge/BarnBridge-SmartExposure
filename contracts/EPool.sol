@@ -260,6 +260,8 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
             (deltaA, deltaB, rChange) = (uint256(totalDeltaA), uint256(-totalDeltaB), 1);
         } else if (totalDeltaA < 0 && totalDeltaB > 0) {
             (deltaA, deltaB, rChange) = (uint256(-totalDeltaA), uint256(totalDeltaB), 0);
+        } else {
+            (deltaA, deltaB, rChange, rDiv) = (0, 0, 0, 0);
         }
         emit RebalancedTranches(deltaA, deltaB, rChange, rDiv);
     }
