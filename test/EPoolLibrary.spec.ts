@@ -235,7 +235,7 @@ describe('EPoolLibrary', function () {
           tranches: [
             {
               currentRatio: ethers.constants.MaxUint256,
-              trancheDelta: { deltaA: toBigNumber('700000000000000010'), deltaB: toBigNumber('700000000000000010'), rChange: 0, rDiv: toBigNumber('1000000000000000000') },
+              trancheDelta: { deltaA: toBigNumber('700000000000000010'), deltaB: toBigNumber('700000000000000010'), rChange: 0, rDiv: toBigNumber('115792089237316195423570985008687907853269984665640564039457584007913129639935') },
               eTokenForTokenATokenB: 2,
               tokenATokenBForEToken: { amountA: toBigNumber('1414213562373095048000000000000000000'), amountB: 0 },
               tokenAForTokenB: toBigNumber('1164977926482447899'),
@@ -245,7 +245,7 @@ describe('EPoolLibrary', function () {
             },
             {
               currentRatio: ethers.constants.MaxUint256,
-              trancheDelta: { deltaA: toUnit('5', 18), deltaB: toUnit('5', 18), rChange: 0, rDiv: toBigNumber('1000000000000000000') },
+              trancheDelta: { deltaA: toUnit('5', 18), deltaB: toUnit('5', 18), rChange: 0, rDiv: toBigNumber('115792089237316195423570985008687907853269984665640564039457584007913129639935') },
               eTokenForTokenATokenB: toBigNumber('41415926535897932300000'),
               tokenATokenBForEToken: { amountA: toBigNumber('141421356237300'), amountB: 0 },
               tokenAForTokenB: toBigNumber('1000000000000000000'),
@@ -255,7 +255,7 @@ describe('EPoolLibrary', function () {
             },
             {
               currentRatio: ethers.constants.MaxUint256,
-              trancheDelta: { deltaA: toBigNumber('299999999999999985000'), deltaB: toBigNumber('299999999999999985000'), rChange: 0, rDiv: toBigNumber('1000000000000000000') },
+              trancheDelta: { deltaA: toBigNumber('299999999999999985000'), deltaB: toBigNumber('299999999999999985000'), rChange: 0, rDiv: toBigNumber('115792089237316195423570985008687907853269984665640564039457584007913129639935') },
               eTokenForTokenATokenB: toBigNumber('99617866194830246'),
               tokenATokenBForEToken: { amountA: toBigNumber('83189033080770296000'), amountB: 0 },
               tokenAForTokenB: toBigNumber('6342657599737772668'),
@@ -610,7 +610,6 @@ describe('EPoolLibrary', function () {
           expected deltaA: ${result.deltaA.toString()}, actual deltaA: ${delta.deltaA.toString()}
           expected deltaB: ${result.deltaB.toString()}, actual deltaB: ${delta.deltaB.toString()}
           expected rChange: ${result.rChange.toString()}, actual rChange: ${delta.rChange.toString()}
-          expected rDiv: ${result.rDiv.toString()}, actual rDiv: ${delta.rDiv.toString()}
           `
         );
       }

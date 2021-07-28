@@ -13,7 +13,7 @@ typechain/
 
 # files
 .DS_Store
-.env
+*.env
 *.log
 *.tsbuildinfo
 coverage.json

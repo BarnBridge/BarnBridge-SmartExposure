@@ -54,7 +54,7 @@ library EPoolLibrary {
             (rChange, rDiv) = (1, sFactorI - (ratio * sFactorI / t.targetRatio));
         } else {
             (rChange, rDiv) = (
-                0, (ratio == type(uint256).max) ? sFactorI : (ratio * sFactorI / t.targetRatio) - sFactorI
+                0, (ratio == type(uint256).max) ? type(uint256).max : (ratio * sFactorI / t.targetRatio) - sFactorI
             );
         }
         deltaA = (

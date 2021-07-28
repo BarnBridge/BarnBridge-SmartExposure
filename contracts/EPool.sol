@@ -276,13 +276,16 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
             (deltaA, deltaB, rChange) = (uint256(totalDeltaA), uint256(-totalDeltaB), 1);
             tokenA.safeTransferFrom(msg.sender, address(this), deltaA);
             tokenB.safeTransfer(msg.sender, deltaB);
+            return (deltaA, deltaB, rChange);
         } else if (totalDeltaA < 0 && totalDeltaB > 0) {
             (deltaA, deltaB, rChange) = (uint256(-totalDeltaA), uint256(totalDeltaB), 0);
             tokenA.safeTransfer(msg.sender, deltaA);
             tokenB.safeTransferFrom(msg.sender, address(this), deltaB);
-        } else {
-            revert("EPool: rebalance too small");
+            return (deltaA, deltaB, rChange);
+        } else if (totalDeltaA == 0 && totalDeltaB == 0) {
+            return (deltaA, deltaB, rChange);
         }
+        revert("EPool: dusty rebalance");
     }
 
     /**
