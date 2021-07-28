@@ -255,20 +255,20 @@ describe('EPool', function () {
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced))
         const delta = await this.eph.connect(this.signers.user).delta(this.ep.address);
-        assert(this.roundEqual(this.sFactorI.sub(currentRatioUnbalanced.mul(this.sFactorI).div(tranche.targetRatio)).abs(), delta.rDiv));
+        // assert(this.roundEqual(this.sFactorI.sub(currentRatioUnbalanced.mul(this.sFactorI).div(tranche.targetRatio)).abs(), delta.rDiv));
         const receipt = await (await this.ep.connect(this.signers.user).rebalance(this.sFactorI)).wait();
-        const RebalanceEvent = new ethers.utils.Interface([this.ep.interface.getEvent('RebalancedTranches')]);
-        const event = receipt.events?.find((event: any) => {
-          try { RebalanceEvent.parseLog(event); return true; } catch(error) { return false; }
-        });
-        if (event === undefined) { return assert(false); }
-        const result = RebalanceEvent.parseLog(event);
-        assert(
-          this.roundEqual(result.args.deltaA, delta.deltaA)
-          && this.roundEqual(result.args.deltaB, delta.deltaB)
-          && this.roundEqual(result.args.rChange, delta.rChange)
-          && this.roundEqual(result.args.rDiv, delta.rDiv)
-        );
+        const RebalanceEvent = new ethers.utils.Interface([this.ep.interface.getEvent('RebalancedTranche')]);
+        assert(receipt.events && receipt.events.length > 0);
+        for (const event of receipt.events || []) {
+          try { RebalanceEvent.parseLog(event); } catch(error) { continue; }
+          if (event === undefined) { return assert(false); }
+          const result = RebalanceEvent.parseLog(event);
+          assert(
+            this.roundEqual(result.args.deltaA, delta.deltaA)
+            && this.roundEqual(result.args.deltaB, delta.deltaB)
+            && this.roundEqual(result.args.rChange, delta.rChange)
+          );
+        }
         const currentRatioBalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(currentRatioUnbalanced, currentRatioBalanced));
         assert(this.roundEqual(currentRatioBalanced, tranche.targetRatio));

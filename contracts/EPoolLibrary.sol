@@ -67,31 +67,28 @@ library EPoolLibrary {
     }
 
     /**
-     * @notice Returns the sum of the tranches reserve deltas
+     * @notice Returns the sum of the tranches total deltas (summed up tranche deltaA and deltaB)
      */
     function delta(
         IEPool.Tranche[] memory ts,
         uint256 rate,
         uint256 sFactorA,
         uint256 sFactorB
-    ) internal pure returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
+    ) internal pure returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
         int256 totalDeltaA;
         int256 totalDeltaB;
         for (uint256 i = 0; i < ts.length; i++) {
-            (uint256 _deltaA, uint256 _deltaB, uint256 _rChange, uint256 _rDiv) = trancheDelta(
-                ts[i], rate, sFactorA, sFactorB
-            );
-            (totalDeltaA, totalDeltaB) = (_rChange == 0)
-                ? (totalDeltaA - int256(_deltaA), totalDeltaB + int256(_deltaB))
-                : (totalDeltaA + int256(_deltaA), totalDeltaB - int256(_deltaB));
-            if (_rDiv > rDiv) rDiv = _rDiv;
+            (uint256 _deltaA, uint256 _deltaB, uint256 _rChange,) = trancheDelta(ts[i], rate, sFactorA, sFactorB);
+            if (_rChange == 0) {
+                (totalDeltaA, totalDeltaB) = (totalDeltaA - int256(_deltaA), totalDeltaB + int256(_deltaB));
+            } else {
+                (totalDeltaA, totalDeltaB) = (totalDeltaA + int256(_deltaA), totalDeltaB - int256(_deltaB));
+            }
         }
         if (totalDeltaA > 0 && totalDeltaB < 0)  {
             (deltaA, deltaB, rChange) = (uint256(totalDeltaA), uint256(-totalDeltaB), 1);
         } else if (totalDeltaA < 0 && totalDeltaB > 0) {
             (deltaA, deltaB, rChange) = (uint256(-totalDeltaA), uint256(totalDeltaB), 0);
-        } else {
-            (deltaA, deltaB, rChange, rDiv) = (0, 0, 0, 0);
         }
     }
 

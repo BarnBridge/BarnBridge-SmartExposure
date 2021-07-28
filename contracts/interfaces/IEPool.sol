@@ -13,6 +13,7 @@ interface IEPool {
         uint256 reserveA;
         uint256 reserveB;
         uint256 targetRatio;
+        uint256 rebalancedAt;
     }
 
     function getController() external view returns (address);
@@ -37,11 +38,11 @@ interface IEPool {
 
     function setAggregator(address oracle, bool inverseRate) external returns (bool);
 
+    function rebalanceMode() external view returns (uint256);
+
     function rebalanceMinRDiv() external view returns (uint256);
 
     function rebalanceInterval() external view returns (uint256);
-
-    function lastRebalance() external view returns (uint256);
 
     function feeRate() external view returns (uint256);
 
@@ -55,7 +56,7 @@ interface IEPool {
 
     function getRate() external view returns (uint256);
 
-    function rebalance(uint256 fracDelta) external returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv);
+    function rebalance(uint256 fracDelta) external returns (uint256 deltaA, uint256 deltaB, uint256 rChange);
 
     function issueExact(address eToken, uint256 amount) external returns (uint256 amountA, uint256 amountB);
 

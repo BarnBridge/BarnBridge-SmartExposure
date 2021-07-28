@@ -18,8 +18,6 @@ interface IKeeperNetworkAdapter is KeeperCompatibleInterface {
 
     function ePoolPeriphery() external returns (IEPoolPeriphery);
 
-    function keeperRebalanceMinRDiv() external returns(uint256);
-
     function keeperRebalanceInterval() external returns(uint256);
 
     function lastKeeperRebalance() external returns(uint256);
@@ -29,8 +27,6 @@ interface IKeeperNetworkAdapter is KeeperCompatibleInterface {
     function setEPoolHelper(IEPoolHelper _ePoolHelper) external returns (bool);
 
     function setEPoolPeriphery(IEPoolPeriphery _ePoolPeriphery) external returns (bool);
-
-    function setKeeperRebalanceMinRDiv(uint256 minRDiv) external returns (bool);
 
     function setKeeperRebalanceInterval(uint256 interval) external returns (bool);
 }

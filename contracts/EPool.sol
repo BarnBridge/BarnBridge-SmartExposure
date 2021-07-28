@@ -35,9 +35,10 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     address[] public tranchesByIndex;
 
     // rebalancing strategy
+    // mode := 0 - deviated or scheduled, 1 - deviated and scheduled
+    uint256 public override rebalanceMode;
     uint256 public override rebalanceMinRDiv;
     uint256 public override rebalanceInterval;
-    uint256 public override lastRebalance;
 
     // fees
     uint256 public override feeRate;
@@ -45,7 +46,7 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     uint256 public override cumulativeFeeB;
 
     event AddedTranche(address indexed eToken);
-    event RebalancedTranches(uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv);
+    event RebalancedTranche(address indexed eToken, uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv);
     event IssuedEToken(address indexed eToken, uint256 amount, uint256 amountA, uint256 amountB, address user);
     event RedeemedEToken(address indexed eToken, uint256 amount, uint256 amountA, uint256 amountB, address user);
     event SetMinRDiv(uint256 minRDiv);
@@ -217,77 +218,70 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
         require(tranchesByIndex.length < TRANCHE_LIMIT, "EPool: max. tranche count");
         require(targetRatio != 0, "EPool: targetRatio == 0");
         IEToken eToken = eTokenFactory.createEToken(eTokenName, eTokenSymbol);
-        tranches[address(eToken)] = Tranche(eToken, 10**eToken.decimals(), 0, 0, targetRatio);
+        tranches[address(eToken)] = Tranche(eToken, 10**eToken.decimals(), 0, 0, targetRatio, 0);
         tranchesByIndex.push(address(eToken));
         emit AddedTranche(address(eToken));
         return true;
     }
 
-    function _trancheDelta(
-        Tranche storage t, uint256 fracDelta
-    ) internal view returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
-        uint256 rate = _rate();
-        (uint256 _deltaA, uint256 _deltaB, uint256 _rChange, uint256 _rDiv) = EPoolLibrary.trancheDelta(
-            t, rate, sFactorA, sFactorB
-        );
-        (deltaA, deltaB, rChange, rDiv) = (
-            fracDelta * _deltaA / EPoolLibrary.sFactorI, fracDelta * _deltaB / EPoolLibrary.sFactorI, _rChange, _rDiv
-        );
-    }
-
-    /**
-     * @notice Rebalances all tranches based on the current rate
-     */
-    function _rebalanceTranches(
-        uint256 fracDelta
+    function _rebalanceTranche(
+        Tranche storage t, uint256 fracDelta, uint256 rate
     ) internal returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
-        require(fracDelta <= EPoolLibrary.sFactorI, "EPool: fracDelta > 1.0");
-        int256 totalDeltaA;
-        int256 totalDeltaB;
-        for (uint256 i = 0; i < tranchesByIndex.length; i++) {
-            Tranche storage t = tranches[tranchesByIndex[i]];
-            (uint256 _deltaA, uint256 _deltaB, uint256 _rChange, uint256 _rDiv) = _trancheDelta(t, fracDelta);
-            if (_rChange == 0) {
-                (t.reserveA, t.reserveB) = (t.reserveA - _deltaA, t.reserveB + _deltaB);
-                (totalDeltaA, totalDeltaB) = (totalDeltaA - int256(_deltaA), totalDeltaB + int256(_deltaB));
-            } else {
-                (t.reserveA, t.reserveB) = (t.reserveA + _deltaA, t.reserveB - _deltaB);
-                (totalDeltaA, totalDeltaB) = (totalDeltaA + int256(_deltaA), totalDeltaB - int256(_deltaB));
-            }
-            if (_rDiv > rDiv) rDiv = _rDiv;
+        uint256 _deltaA; uint256 _deltaB;
+        (_deltaA, _deltaB, rChange, rDiv) = EPoolLibrary.trancheDelta(t, rate, sFactorA, sFactorB);
+        bool deviated = rDiv >= rebalanceMinRDiv;
+        bool scheduled = block.timestamp >= t.rebalancedAt + rebalanceInterval;
+        if (rebalanceMode == 0) {
+            if (!(deviated || scheduled)) return (0, 0, 0, 0);
+        } else if (rebalanceMode == 1) {
+            if (!(deviated && scheduled)) return (0, 0, 0, 0);
         }
-        if (totalDeltaA > 0 && totalDeltaB < 0)  {
-            (deltaA, deltaB, rChange) = (uint256(totalDeltaA), uint256(-totalDeltaB), 1);
-        } else if (totalDeltaA < 0 && totalDeltaB > 0) {
-            (deltaA, deltaB, rChange) = (uint256(-totalDeltaA), uint256(totalDeltaB), 0);
+        (deltaA, deltaB) = (fracDelta * _deltaA / EPoolLibrary.sFactorI, fracDelta * _deltaB / EPoolLibrary.sFactorI);
+        if (deltaA == 0 || deltaB == 0)
+         if (rChange == 0) {
+            (t.reserveA, t.reserveB) = (t.reserveA - deltaA, t.reserveB + deltaB);
         } else {
-            (deltaA, deltaB, rChange, rDiv) = (0, 0, 0, 0);
+            (t.reserveA, t.reserveB) = (t.reserveA + deltaA, t.reserveB - deltaB);
         }
-        emit RebalancedTranches(deltaA, deltaB, rChange, rDiv);
+        t.rebalancedAt = block.timestamp;
+        emit RebalancedTranche(address(t.eToken), deltaA, deltaB, rChange, rDiv);
     }
 
     /**
      * @notice Rebalances all tranches based on the current rate
-     * @dev Can be overriden contract inherting EPool for custom logic during rebalancing
+     * @dev Can be overriden by contract inherting from EPool and implementing custom logic for rebalancing
      * @param fracDelta Fraction of the delta of deltaA or deltaB to rebalance
-     * @return deltaA Rebalanced delta of reserveA
-     * @return deltaB Rebalanced delta of reserveB
-     * @return rChange 0 for deltaA <= 0 and deltaB >= 0, 1 for deltaA > 0 and deltaB < 0 (trancheDelta method)
-     * @return rDiv Max. ratio deviation from target ratio over all tranches
+     * @return deltaA Summed rebalanced delta of all tranches reserveA
+     * @return deltaB Summed rebalanced delta of all tranches reserveB
+     * @return rChange 0 - for deltaA <= 0 and deltaB >= 0, 1 - for deltaA > 0 and deltaB < 0
      */
     function rebalance(
         uint256 fracDelta
-    ) external virtual override returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
-        (deltaA, deltaB, rChange, rDiv) = _rebalanceTranches(fracDelta);
-        require(rDiv >= rebalanceMinRDiv, "EPool: minRDiv not met");
-        require(block.timestamp >= lastRebalance + rebalanceInterval, "EPool: within interval");
-        lastRebalance = block.timestamp;
-        if (rChange == 0) {
+    ) external virtual override returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
+        require(fracDelta <= EPoolLibrary.sFactorI, "EPool: fracDelta > 1.0");
+        uint256 rate = _rate();
+        int256 totalDeltaA;
+        int256 totalDeltaB;
+        for (uint256 i = 0; i < tranchesByIndex.length; i++) {
+            (uint256 _deltaA, uint256 _deltaB, uint256 _rChange,) = _rebalanceTranche(
+                tranches[tranchesByIndex[i]], fracDelta, rate
+            );
+            if (_rChange == 0) {
+                (totalDeltaA, totalDeltaB) = (totalDeltaA - int256(_deltaA), totalDeltaB + int256(_deltaB));
+            } else {
+                (totalDeltaA, totalDeltaB) = (totalDeltaA + int256(_deltaA), totalDeltaB - int256(_deltaB));
+            }
+        }
+        if (totalDeltaA > 0 && totalDeltaB < 0)  {
+            (deltaA, deltaB, rChange) = (uint256(totalDeltaA), uint256(-totalDeltaB), 1);
+            tokenA.safeTransferFrom(msg.sender, address(this), deltaA);
+            tokenB.safeTransfer(msg.sender, deltaB);
+        } else if (totalDeltaA < 0 && totalDeltaB > 0) {
+            (deltaA, deltaB, rChange) = (uint256(-totalDeltaA), uint256(totalDeltaB), 0);
             tokenA.safeTransfer(msg.sender, deltaA);
             tokenB.safeTransferFrom(msg.sender, address(this), deltaB);
         } else {
-            tokenA.safeTransferFrom(msg.sender, address(this), deltaA);
-            tokenB.safeTransfer(msg.sender, deltaB);
+            revert("EPool: rebalance too small");
         }
     }
 

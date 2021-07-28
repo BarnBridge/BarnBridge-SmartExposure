@@ -27,14 +27,14 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 18),
         tranches: [
-          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048') }
+          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: 0,
         results: {
-          delta: { deltaA: 0, deltaB: 0, rChange: 0, rDiv: 0 },
+          delta: { deltaA: 0, deltaB: 0, rChange: 0 },
           tranches: [
             {
               currentRatio: toBigNumber('428571428571428550'),
@@ -76,14 +76,14 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 18),
         tranches: [
-          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048') }
+          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: toUnit('1', 18),
         results: {
-          delta: { deltaA: toBigNumber('705300000000000014988'), deltaB: toBigNumber('705300000000000014988'), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
+          delta: { deltaA: toBigNumber('705300000000000014988'), deltaB: toBigNumber('705300000000000014988'), rChange: 1 },
           tranches: [
             {
               currentRatio: 0,
@@ -125,14 +125,14 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 18),
         tranches: [
-          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048') }
+          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('2', 18),
         feeRate: toUnit('0.05', 18),
         results: {
-          delta: { deltaA: toBigNumber('352650000000000007493'), deltaB: toBigNumber('705300000000000014986'), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
+          delta: { deltaA: toBigNumber('352650000000000007493'), deltaB: toBigNumber('705300000000000014986'), rChange: 1 },
           tranches: [
             {
               currentRatio: 0,
@@ -174,15 +174,15 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 8),
         sFactorB: toUnit('1', 22),
         tranches: [
-          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048') }
+          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('2', 18),
         feeRate: toUnit('1', 18),
         targetRatio: toUnit('1', 18),
         results: {
-          delta: { deltaA: toBigNumber('3526498'), deltaB: toBigNumber('705299600000000000000'), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
+          delta: { deltaA: toBigNumber('3526498'), deltaB: toBigNumber('705299600000000000000'), rChange: 1 },
           tranches: [
             {
               currentRatio: 0,
@@ -224,14 +224,14 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 18),
         tranches: [
-          { reserveA: toUnit('1', 18), reserveB: 0, targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: toUnit('10', 18), reserveB: 0, targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: toUnit('1000', 18), reserveB: 0, targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048') }
+          { reserveA: toUnit('1', 18), reserveB: 0, targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('10', 18), reserveB: 0, targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('1000', 18), reserveB: 0, targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: toUnit('2', 18),
         results: {
-          delta: { deltaA: toBigNumber('305699999999999985010'), deltaB: toBigNumber('305699999999999985010'), rChange: 0, rDiv: toBigNumber('1000000000000000000') },
+          delta: { deltaA: toBigNumber('305699999999999985010'), deltaB: toBigNumber('305699999999999985010'), rChange: 0 },
           tranches: [
             {
               currentRatio: ethers.constants.MaxUint256,
@@ -273,14 +273,14 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 18),
         tranches: [
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048') }
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: toUnit('100', 18),
         results: {
-          delta: { deltaA: 4, deltaB: 4, rChange: 1, rDiv: toBigNumber('1333333333333333450') },
+          delta: { deltaA: 4, deltaB: 4, rChange: 1 },
           tranches: [
             {
               currentRatio: toBigNumber('1000000000000000000'),
@@ -322,14 +322,14 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 8),
         sFactorB: toUnit('1', 22),
         tranches: [
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048') }
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('2', 18),
         feeRate: toUnit('0.01', 18),
         results: {
-          delta: { deltaA: toBigNumber('750000002249996262'), deltaB: toBigNumber('150000000449999252400000000000000'), rChange: 0, rDiv: toBigNumber('466666666666665690000000000000001') },
+          delta: { deltaA: toBigNumber('750000002249996262'), deltaB: toBigNumber('150000000449999252400000000000000'), rChange: 0 },
           tranches: [
             {
               currentRatio: toBigNumber('200000000000000000000000000000000'),
@@ -371,14 +371,14 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 8),
         tranches: [
-          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048') },
-          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048') }
+          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: toUnit('1', 18),
         results: {
-          delta: { deltaA: toBigNumber('14999999998500000045000000003'), deltaB: toBigNumber('1499999999850000004'), rChange: 1, rDiv: toBigNumber('999999999957142858') },
+          delta: { deltaA: toBigNumber('14999999998500000045000000003'), deltaB: toBigNumber('1499999999850000004'), rChange: 1 },
           tranches: [
             {
               currentRatio: toBigNumber('100000000'),
@@ -420,12 +420,12 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 6),
         tranches: [
-          { reserveA: toBigNumber('100000000000000009'), reserveB: toBigNumber('100000'), targetRatio: toUnit(String(50/50), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 }
+          { reserveA: toBigNumber('100000000000000009'), reserveB: toBigNumber('100000'), targetRatio: toUnit(String(50/50), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0, rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: toUnit('1', 18),
         results: {
-          delta: { deltaA: toBigNumber('0'), deltaB: toBigNumber('0'), rChange: 0, rDiv: 0 },
+          delta: { deltaA: toBigNumber('0'), deltaB: toBigNumber('0'), rChange: 0 },
           tranches: [
             {
               currentRatio: toBigNumber('1000000000000000090'),
@@ -447,14 +447,14 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 6),
         tranches: [
-          { reserveA: toBigNumber('3811729104010212'), reserveB: toBigNumber('8067834'), targetRatio: toUnit(String(50/50), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 },
-          { reserveA: toBigNumber('2082532324155799'), reserveB: toBigNumber('13369999'), targetRatio: toUnit(String(25/75), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 },
-          { reserveA: toBigNumber('11183284412251486'), reserveB: toBigNumber('7893085'), targetRatio: toUnit(String(75/25), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 }
+          { reserveA: toBigNumber('3811729104010212'), reserveB: toBigNumber('8067834'), targetRatio: toUnit(String(50/50), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0, rebalancedAt: 0 },
+          { reserveA: toBigNumber('2082532324155799'), reserveB: toBigNumber('13369999'), targetRatio: toUnit(String(25/75), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0, rebalancedAt: 0 },
+          { reserveA: toBigNumber('11183284412251486'), reserveB: toBigNumber('7893085'), targetRatio: toUnit(String(75/25), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0, rebalancedAt: 0 }
         ],
         rate: toBigNumber('2122977615747369595606'),
         feeRate: toBigNumber('5000000000000000'),
         results: {
-          delta: { deltaA: toBigNumber('0'), deltaB: toBigNumber('0'), rChange: 0, rDiv: 0 },
+          delta: { deltaA: toBigNumber('0'), deltaB: toBigNumber('0'), rChange: 0 },
           tranches: [
             {
               currentRatio: toBigNumber('1003022070744943096'),
@@ -499,11 +499,14 @@ describe('EPoolLibrary', function () {
         reserveB: EthersBigNumber,
         rate: EthersBigNumber,
         targetRatio: EthersBigNumber,
+        rebalancedAt: EthersBigNumber,
         sFactorA?: EthersBigNumber,
         sFactorB?:EthersBigNumber
       ): Promise<EthersBigNumber> {
         return await this.epl.connect(this.signers.admin).currentRatio(
-          { eToken: ethers.constants.AddressZero, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio },
+          {
+            eToken: ethers.constants.AddressZero, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio, rebalancedAt
+          },
           rate,
           sFactorA || this.sFactorA,
           sFactorB || this.sFactorB
@@ -518,7 +521,9 @@ describe('EPoolLibrary', function () {
         for (let i = 0; i < s.tranches.length; i++) {
           const t = s.tranches[i];
           const result = s.results.tranches[i].currentRatio;
-          const ratio = await this.currentRatio(t.reserveA, t.reserveB, s.rate, t.targetRatio, s.sFactorA, s.sFactorB);
+          const ratio = await this.currentRatio(
+            t.reserveA, t.reserveB, s.rate, t.targetRatio, t.rebalancedAt, s.sFactorA, s.sFactorB
+          );
           assert(ratio.eq(result), `expected ratio: ${result.toString()}, actual ratio: ${ratio.toString()}`);
         }
       }
@@ -532,11 +537,14 @@ describe('EPoolLibrary', function () {
         reserveB: EthersBigNumber,
         rate: EthersBigNumber,
         targetRatio: EthersBigNumber,
+        rebalancedAt: EthersBigNumber,
         sFactorA?: EthersBigNumber,
         sFactorB?:EthersBigNumber
       ): Promise<{ deltaA: EthersBigNumber; deltaB: EthersBigNumber; rChange: EthersBigNumber; rDiv: EthersBigNumber }> {
         return await this.epl.connect(this.signers.admin).trancheDelta(
-          { eToken: ethers.constants.AddressZero, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio },
+          {
+            eToken: ethers.constants.AddressZero, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio, rebalancedAt
+          },
           rate,
           sFactorA || this.sFactorA,
           sFactorB || this.sFactorB
@@ -551,7 +559,9 @@ describe('EPoolLibrary', function () {
         for (let i = 0; i < s.tranches.length; i++) {
           const t = s.tranches[i];
           const result = s.results.tranches[i].trancheDelta;
-          const delta = await this.trancheDelta(t.reserveA, t.reserveB, s.rate, t.targetRatio, s.sFactorA, s.sFactorB);
+          const delta = await this.trancheDelta(
+            t.reserveA, t.reserveB, s.rate, t.targetRatio, t.rebalancedAt, s.sFactorA, s.sFactorB
+          );
           assert(
             delta.deltaA.eq(result.deltaA)
             && delta.deltaB.eq(result.deltaB)
@@ -572,11 +582,13 @@ describe('EPoolLibrary', function () {
   describe('#delta', function () {
     before(async function () {
       this.delta = async function (
-        tranches: { reserveA: EthersBigNumber; reserveB: EthersBigNumber; targetRatio: EthersBigNumber }[],
+        tranches: {
+          reserveA: EthersBigNumber; reserveB: EthersBigNumber; targetRatio: EthersBigNumber, rebalancedAt: EthersBigNumber
+        }[],
         rate: EthersBigNumber,
         sFactorA?: EthersBigNumber,
         sFactorB?:EthersBigNumber
-      ): Promise<{ deltaA: EthersBigNumber; deltaB: EthersBigNumber; rChange: EthersBigNumber; rDiv: EthersBigNumber }> {
+      ): Promise<{ deltaA: EthersBigNumber; deltaB: EthersBigNumber; rChange: EthersBigNumber }> {
         return await this.epl.connect(this.signers.admin).delta(
           tranches.map((t) => ({ ...t, eToken: ethers.constants.AddressZero, sFactorE: this.sFactorE })),
           rate,
@@ -593,10 +605,7 @@ describe('EPoolLibrary', function () {
         const result = s.results.delta;
         const delta = await this.delta(s.tranches, s.rate, s.sFactorA, s.sFactorB);
         assert(
-          delta.deltaA.eq(result.deltaA)
-          && delta.deltaB.eq(result.deltaB)
-          && delta.rChange.eq(result.rChange)
-          && delta.rDiv.eq(result.rDiv),
+          delta.deltaA.eq(result.deltaA) && delta.deltaB.eq(result.deltaB) && delta.rChange.eq(result.rChange),
           `
           expected deltaA: ${result.deltaA.toString()}, actual deltaA: ${delta.deltaA.toString()}
           expected deltaB: ${result.deltaB.toString()}, actual deltaB: ${delta.deltaB.toString()}
@@ -616,13 +625,14 @@ describe('EPoolLibrary', function () {
         reserveB: EthersBigNumber,
         rate: EthersBigNumber,
         targetRatio: EthersBigNumber,
+        rebalancedAt: EthersBigNumber,
         amountA: EthersBigNumber,
         amountB: EthersBigNumber,
         sFactorA?: EthersBigNumber,
         sFactorB?:EthersBigNumber
       ): Promise<EthersBigNumber> {
         return await this.epl.connect(this.signers.admin).eTokenForTokenATokenB(
-          { eToken, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio },
+          { eToken, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio, rebalancedAt },
           amountA,
           amountB,
           rate,
@@ -644,7 +654,16 @@ describe('EPoolLibrary', function () {
           await this.eToken.connect(this.signers.admin).mint(this.accounts.admin, t.eTokenSupply);
           const result = s.results.tranches[i].eTokenForTokenATokenB;
           const amount = await this.eTokenForTokenATokenB(
-            this.eToken.address, t.reserveA, t.reserveB, s.rate, t.targetRatio, t.amountA, t.amountB, s.sFactorA, s.sFactorB
+            this.eToken.address,
+            t.reserveA,
+            t.reserveB,
+            s.rate,
+            t.targetRatio,
+            t.rebalancedAt,
+            t.amountA,
+            t.amountB,
+            s.sFactorA,
+            s.sFactorB
           );
           assert(amount.eq(result), `expected amount: ${result.toString()}, actual amount: ${amount.toString()}`);
         }
@@ -660,12 +679,13 @@ describe('EPoolLibrary', function () {
         reserveB: EthersBigNumber,
         rate: EthersBigNumber,
         targetRatio: EthersBigNumber,
+        rebalancedAt: EthersBigNumber,
         amount: EthersBigNumber,
         sFactorA?: EthersBigNumber,
         sFactorB?:EthersBigNumber
       ): Promise<{ amountA: EthersBigNumber; amountB: EthersBigNumber; }> {
         return await this.epl.connect(this.signers.admin).tokenATokenBForEToken(
-          { eToken, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio },
+          { eToken, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio, rebalancedAt },
           amount,
           rate,
           sFactorA || this.sFactorA,

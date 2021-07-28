@@ -28,7 +28,7 @@ contract TestEPoolLibrary {
         uint256 rate,
         uint256 sFactorA,
         uint256 sFactorB
-    ) external pure returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
+    ) external pure returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
         return EPoolLibrary.delta(ts, rate, sFactorA, sFactorB);
     }
 

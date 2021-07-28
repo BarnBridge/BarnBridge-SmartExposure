@@ -22,7 +22,7 @@ contract EPoolHelper is IEPoolHelper {
 
     function delta(
         IEPool ePool
-    ) external view override returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
+    ) external view override returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
         return EPoolLibrary.delta(ePool.getTranches(), ePool.getRate(), ePool.sFactorA(), ePool.sFactorB());
     }
 

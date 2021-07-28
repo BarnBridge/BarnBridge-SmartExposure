@@ -28,7 +28,6 @@ import './tasks/contracts/EPoolPeriphery/redeemForMinTokenA';
 import './tasks/contracts/EPoolPeriphery/redeemForMinTokenB';
 import './tasks/contracts/EPoolPeriphery/rebalanceWithFlashSwap';
 import './tasks/contracts/EPoolPeriphery/setMaxFlashSwapSlippage';
-import './tasks/contracts/KeeperNetworkAdapter/setKeeperRebalanceMinRDiv';
 import './tasks/contracts/KeeperNetworkAdapter/setKeeperRebalanceInterval';
 import './tasks/contracts/KeeperSubsidyPool/addSubsidy';
 import './tasks/contracts/KeeperSubsidyPool/setBeneficiary';

@@ -23,7 +23,6 @@ task(GET_STATE, 'Get the state of a EPool')
   console.log(`  tokenA:         ${await ePool.connect(admin).tokenA()}`);
   console.log(`  tokenB:         ${await ePool.connect(admin).tokenB()}`);
   console.log(`  rate:           ${await ePool.connect(admin).getRate()}`);
-  console.log(`  rDiv:           ${(await ePoolHelper.connect(admin).delta(ePool.address)).rDiv.toString()}`);
   console.log(`  minRDiv:        ${await ePool.connect(admin).rebalanceMinRDiv()}`);
   console.log(`  interval:       ${await ePool.connect(admin).rebalanceInterval()}`);
   for(let i = 0; ; i++) {
@@ -31,12 +30,15 @@ task(GET_STATE, 'Get the state of a EPool')
       const tranche = await ePool.connect(admin).getTranche(await ePool.connect(admin).tranchesByIndex(i));
       if (ethers.constants.AddressZero === tranche.eToken) { break; }
       const currentRatio = await ePoolHelper.connect(admin).currentRatio(ePool.address, tranche.eToken);
+      const trancheDelta = await ePoolHelper.connect(admin).trancheDelta(ePool.address, tranche.eToken);
       console.log(`  Tranche ${i}`);
       console.log(`    eToken:       ${tranche.eToken}`);
       console.log(`    reserveA:     ${tranche.reserveA}`);
       console.log(`    reserveB:     ${tranche.reserveB}`);
       console.log(`    targetRatio:  ${tranche.targetRatio}`);
       console.log(`    currentRatio: ${currentRatio}`);
+      console.log(`    rDiv:         ${trancheDelta.rDiv}`);
+      console.log(`    rebalancedAt: ${tranche.rebalancedAt}`);
     } catch(error) { break; }
   }
 });

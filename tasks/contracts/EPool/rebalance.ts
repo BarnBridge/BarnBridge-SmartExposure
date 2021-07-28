@@ -45,10 +45,11 @@ task(REBALANCE, 'Rebalances a EPool')
   console.log(`EPool.rebalance:`);
   console.log(`  TxHash:         ${tx_issue.hash}`);
   const receipt = await tx_issue.wait();
-  const RebalanceEvent = new ethers.utils.Interface([ePool.interface.getEvent('RebalancedTranches')]);
+  const RebalanceEvent = new ethers.utils.Interface([ePool.interface.getEvent('RebalancedTranche')]);
   receipt.events?.forEach((event: any) => {
     try {
       const result = RebalanceEvent.parseLog(event);
+      console.log(`  eToken:         ${result.args.eToken}` );
       console.log(`  deltaA:         ${result.args.deltaA}` );
       console.log(`  deltaB:         ${result.args.deltaB}` );
       console.log(`  rChange:        ${result.args.rChange}` );

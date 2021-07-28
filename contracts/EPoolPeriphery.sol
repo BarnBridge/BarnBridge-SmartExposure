@@ -299,7 +299,7 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
     ) external override returns (bool) {
         require(ePools[address(ePool)], "EPoolPeriphery: unapproved EPool");
         (address tokenA, address tokenB) = (address(ePool.tokenA()), address(ePool.tokenB()));
-        (uint256 deltaA, uint256 deltaB, uint256 rChange, ) = EPoolLibrary.delta(
+        (uint256 deltaA, uint256 deltaB, uint256 rChange) = EPoolLibrary.delta(
             ePool.getTranches(), ePool.getRate(), ePool.sFactorA(), ePool.sFactorB()
         );
         IUniswapV2Pair pair = IUniswapV2Pair(factory.getPair(address(tokenA), address(tokenB)));
@@ -336,7 +336,7 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         require(ePools[address(ePool)], "EPoolPeriphery: unapproved EPool");
         // fails if no funds are forwarded in the flash swap callback from the uniswap pair
         // TokenA, TokenB are already approved
-        (uint256 deltaA, uint256 deltaB, uint256 rChange, ) = ePool.rebalance(fracDelta);
+        (uint256 deltaA, uint256 deltaB, uint256 rChange) = ePool.rebalance(fracDelta);
         address[] memory path = new address[](2); // [0] flash swap repay token, [1] flash lent token
         uint256 amountsIn; // flash swap repay amount
         uint256 deltaOut;

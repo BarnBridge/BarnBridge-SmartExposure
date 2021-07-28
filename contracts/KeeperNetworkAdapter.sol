@@ -5,6 +5,7 @@ import "./interfaces/IKeeperNetworkAdapter.sol";
 import "./interfaces/IEPoolPeriphery.sol";
 import "./interfaces/IEPoolHelper.sol";
 import "./interfaces/IEPool.sol";
+import "./EPoolLibrary.sol";
 import "./utils/ControllerMixin.sol";
 
 contract KeeperNetworkAdapter is ControllerMixin, IKeeperNetworkAdapter {
@@ -13,7 +14,6 @@ contract KeeperNetworkAdapter is ControllerMixin, IKeeperNetworkAdapter {
     IEPoolHelper public override ePoolHelper;
     IEPoolPeriphery public override ePoolPeriphery;
 
-    uint256 public override keeperRebalanceMinRDiv = ~uint256(0);
     uint256 public override keeperRebalanceInterval;
     uint256 public override lastKeeperRebalance;
 
@@ -48,7 +48,9 @@ contract KeeperNetworkAdapter is ControllerMixin, IKeeperNetworkAdapter {
      * @param _controller Address of the new Controller
      * @return True on success
      */
-    function setController(address _controller) external override onlyDao("KeeperNetworkAdapter: not dao") returns (bool) {
+    function setController(
+        address _controller
+    ) external override onlyDao("KeeperNetworkAdapter: not dao") returns (bool) {
         _setController(_controller);
         return true;
     }
@@ -77,14 +79,6 @@ contract KeeperNetworkAdapter is ControllerMixin, IKeeperNetworkAdapter {
         return true;
     }
 
-    function setKeeperRebalanceMinRDiv(
-        uint256 minRDiv
-    ) external override onlyDaoOrGuardian("KeeperNetworkAdapter: not dao or guardian") returns (bool) {
-        keeperRebalanceMinRDiv = minRDiv;
-        emit SetKeeperRebalanceMinRDiv(minRDiv);
-        return true;
-    }
-
     function setKeeperRebalanceInterval(
         uint256 interval
     ) external override onlyDaoOrGuardian("KeeperNetworkAdapter: not dao or guardian") returns (bool) {
@@ -96,17 +90,23 @@ contract KeeperNetworkAdapter is ControllerMixin, IKeeperNetworkAdapter {
     function checkUpkeep(
         bytes calldata /*checkData*/
     ) external view override returns (bool upkeepNeeded, bytes memory performData) {
-        (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) = ePoolHelper.delta(ePool);
         address keeperSubsidyPool = address(ePoolPeriphery.keeperSubsidyPool());
-        bool funded = (rChange == 0)
-            ? ePool.tokenB().balanceOf(keeperSubsidyPool) >= deltaB
-            : ePool.tokenA().balanceOf(keeperSubsidyPool) >= deltaA;
-        return (
-            block.timestamp >= lastKeeperRebalance + keeperRebalanceInterval && rDiv >= keeperRebalanceMinRDiv
-            && block.timestamp >= ePool.lastRebalance() + ePool.rebalanceInterval() && rDiv >= ePool.rebalanceMinRDiv()
-            && funded,
-            new bytes(0)
-        );
+        (uint256 deltaA, uint256 deltaB, uint256 rChange) = ePoolHelper.delta(ePool);
+        uint256 maxFlashSwapSlippage = ePoolPeriphery.maxFlashSwapSlippage();
+        bool funded;
+        if (rChange == 0) {
+            funded = (
+                ePool.tokenB().balanceOf(keeperSubsidyPool)
+                    >= (uint256(deltaB) * maxFlashSwapSlippage / EPoolLibrary.sFactorI) - uint256(deltaB)
+            );
+        } else {
+            funded = (
+                ePool.tokenA().balanceOf(keeperSubsidyPool)
+                    >= (uint256(deltaA) * maxFlashSwapSlippage / EPoolLibrary.sFactorI) - uint256(deltaA)
+            );
+
+        }
+        return (block.timestamp >= lastKeeperRebalance + keeperRebalanceInterval && funded, new bytes(0));
     }
 
     function performUpkeep(bytes calldata /*performData*/) external override {
