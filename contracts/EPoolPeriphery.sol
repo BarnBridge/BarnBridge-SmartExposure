@@ -61,9 +61,9 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         maxFlashSwapSlippage = _maxFlashSwapSlippage; // e.g. 1.05e18 -> 5% slippage
     }
 
-        /**
-     * @notice Returns the address of the current Aggregator which provides the exchange rate between TokenA and TokenB
-     * @return Address of aggregator
+    /**
+     * @notice Returns the address of the Controller
+     * @return Address of Controller
      */
     function getController() external view override returns (address) {
         return address(controller);

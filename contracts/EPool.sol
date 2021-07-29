@@ -34,10 +34,13 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     mapping(address => Tranche) public tranches;
     address[] public tranchesByIndex;
 
-    // rebalancing strategy
-    // mode := 0 - deviated or scheduled, 1 - deviated and scheduled
+    // mode by which to trigger rebalancing
+    // 0 := rDiv >= minRDiv OR block.timestamp >= lastRebalance + interval
+    // 1 := rDiv >= minRDiv AND block.timestamp >= lastRebalance + interval
     uint256 public override rebalanceMode;
+    // min. deviation from target ratio
     uint256 public override rebalanceMinRDiv;
+    // interval in seconds between rebalances
     uint256 public override rebalanceInterval;
 
     // fees
@@ -49,6 +52,7 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     event RebalancedTranche(address indexed eToken, uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv);
     event IssuedEToken(address indexed eToken, uint256 amount, uint256 amountA, uint256 amountB, address user);
     event RedeemedEToken(address indexed eToken, uint256 amount, uint256 amountA, uint256 amountB, address user);
+    event SetRebalanceMode(uint256 rebalanceMode);
     event SetMinRDiv(uint256 minRDiv);
     event SetRebalanceInterval(uint256 interval);
     event SetFeeRate(uint256 feeRate);
@@ -78,8 +82,8 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     }
 
     /**
-     * @notice Returns the address of the current Aggregator which provides the exchange rate between TokenA and TokenB
-     * @return Address of aggregator
+     * @notice Returns the address of the Controller
+     * @return Address of Controller
      */
     function getController() external view override returns (address) {
         return address(controller);
@@ -129,14 +133,28 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     }
 
     /**
+     * @notice Set rebalancing mode required for triggering a rebalance. See rebalanceMode definition.
+     * @dev Can only be called by an authorized sender
+     * @param mode mode (0 for OR, 1 for AND)
+     * @return True on success
+     */
+    function setRebalanceMode(
+        uint256 mode
+    ) external override onlyDao("EPool: not dao") returns (bool) {
+        rebalanceMode = mode;
+        emit SetRebalanceMode(mode);
+        return true;
+    }
+
+    /**
      * @notice Set min. deviation (in percentage scaled by 1e18) required for triggering a rebalance
      * @dev Can only be called by an authorized sender
      * @param minRDiv min. ratio deviation
      * @return True on success
      */
-    function setMinRDiv(
+    function setRebalanceMinRDiv(
         uint256 minRDiv
-    ) external onlyDao("EPool: not dao") returns (bool) {
+    ) external override onlyDao("EPool: not dao") returns (bool) {
         rebalanceMinRDiv = minRDiv;
         emit SetMinRDiv(minRDiv);
         return true;
@@ -150,7 +168,7 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
      */
     function setRebalanceInterval(
         uint256 interval
-    ) external onlyDao("EPool: not dao") returns (bool) {
+    ) external override onlyDao("EPool: not dao") returns (bool) {
         rebalanceInterval = interval;
         emit SetRebalanceInterval(interval);
         return true;
@@ -229,16 +247,19 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     ) internal returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
         uint256 _deltaA; uint256 _deltaB;
         (_deltaA, _deltaB, rChange, rDiv) = EPoolLibrary.trancheDelta(t, rate, sFactorA, sFactorB);
-        bool deviated = rDiv >= rebalanceMinRDiv;
-        bool scheduled = block.timestamp >= t.rebalancedAt + rebalanceInterval;
-        if (rebalanceMode == 0) {
-            if (!(deviated || scheduled)) return (0, 0, 0, 0);
-        } else if (rebalanceMode == 1) {
-            if (!(deviated && scheduled)) return (0, 0, 0, 0);
-        }
         (deltaA, deltaB) = (fracDelta * _deltaA / EPoolLibrary.sFactorI, fracDelta * _deltaB / EPoolLibrary.sFactorI);
-        if (deltaA == 0 || deltaB == 0)
-         if (rChange == 0) {
+        (bool deviated, bool bided) = (rDiv >= rebalanceMinRDiv, block.timestamp >= t.rebalancedAt + rebalanceInterval);
+        if (
+            // skip if condition of rebalanceMode 0 wasn't met
+            rebalanceMode == 0 && !(deviated || bided)
+            // skip if condition of rebalanceMode 1 wasn't met
+            || rebalanceMode == 1 && !(deviated && bided)
+            // skip if deltas are close to 0 --> avoid rebalancing of dust
+            || (deltaA == 0 || deltaB == 0)
+        ) {
+            return (0, 0, 0, 0);
+        }
+        if (rChange == 0) {
             (t.reserveA, t.reserveB) = (t.reserveA - deltaA, t.reserveB + deltaB);
         } else {
             (t.reserveA, t.reserveB) = (t.reserveA + deltaA, t.reserveB - deltaB);

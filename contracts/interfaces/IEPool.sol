@@ -44,6 +44,12 @@ interface IEPool {
 
     function rebalanceInterval() external view returns (uint256);
 
+    function setRebalanceMode(uint256 mode) external returns (bool);
+
+    function setRebalanceMinRDiv(uint256 minRDiv) external returns (bool);
+
+    function setRebalanceInterval(uint256 interval) external returns (bool);
+
     function feeRate() external view returns (uint256);
 
     function cumulativeFeeA() external view returns (uint256);

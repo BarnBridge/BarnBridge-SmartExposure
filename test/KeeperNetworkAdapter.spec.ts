@@ -117,27 +117,6 @@ describe('KeeperNetworkAdapter', function () {
     });
   });
 
-  describe('#setKeeperRebalanceMinRDiv', function () {
-    it('should update minRDiv if msg.sender is dao', async function () {
-      await expect(
-        this.kna.connect(this.signers.dao).setKeeperRebalanceMinRDiv(1)
-      ).to.emit(this.kna, 'SetKeeperRebalanceMinRDiv').withArgs(1);
-      expect(await this.kna.connect(this.signers.dao).keeperRebalanceMinRDiv()).to.equal(1);
-    });
-
-    it('should update minRDiv if msg.sender is guardian', async function () {
-      await this.kna.connect(this.signers.guardian).setKeeperRebalanceMinRDiv(1);
-      expect(await this.kna.connect(this.signers.guardian).keeperRebalanceMinRDiv()).to.equal(1);
-    });
-
-    it('should fail updating minRDiv if msg.sender is not dao or guardian', async function () {
-      await expect(
-        this.kna.connect(this.signers.user).setKeeperRebalanceMinRDiv(1)
-      ).to.be.revertedWith('KeeperNetworkAdapter: not dao or guardian');
-    });
-  });
-
-
   describe('#setKeeperRebalanceInterval', function () {
     it('should update rebalance interval if msg.sender is dao', async function () {
       await expect(
