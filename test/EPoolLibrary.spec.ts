@@ -705,7 +705,7 @@ describe('EPoolLibrary', function () {
           await this.eToken.connect(this.signers.admin).mint(this.accounts.admin, t.eTokenSupply);
           const result = s.results.tranches[i].tokenATokenBForEToken;
           const amounts = await this.tokenATokenBForEToken(
-            this.eToken.address, t.reserveA, t.reserveB, s.rate, t.targetRatio, t.eTokenAmount, s.sFactorA, s.sFactorB
+            this.eToken.address, t.reserveA, t.reserveB, s.rate, t.targetRatio, t.rebalancedAt, t.eTokenAmount, s.sFactorA, s.sFactorB
           );
           assert(
             this.roundEqual(amounts.amountA, result.amountA) && this.roundEqual(amounts.amountB, result.amountB),
