@@ -216,16 +216,16 @@ describe('KeeperNetworkAdapter', function () {
         this.ep.address, tranche.eToken, this.eTokenAmountIssued, this.amountA, deadline
       );
 
+      this.rebalanceMinRDiv = parseUnits('0.02', this.decI);
+      await this.ep.connect(this.signers.admin).setRebalanceMinRDiv(this.rebalanceMinRDiv);
+
       // set keeper network adapter
-      this.keeperRebalanceMinRDiv = parseUnits('0.02', this.decA);
-      await this.kna.connect(this.signers.dao).setKeeperRebalanceMinRDiv(this.keeperRebalanceMinRDiv);
-      await this.kna.connect(this.signers.dao).setEPool(this.ep.address);
+      await this.kna.connect(this.signers.dao).addEPool(this.ep.address, this.epp.address);
       await this.kna.connect(this.signers.dao).setEPoolHelper(this.eph.address);
-      await this.kna.connect(this.signers.dao).setEPoolPeriphery(this.epp.address);
     });
 
     describe('#checkUpkeep', function () {
-      it('should check upkeep - false (> minRDiv && > rebalanceInterval && not funded)', async function () {
+      it('should check upkeep - false (> rebalanceInterval && not funded)', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1850));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
@@ -234,40 +234,27 @@ describe('KeeperNetworkAdapter', function () {
         assert(upkeepNeeded === false);
       });
 
-      it('should check upkeep - false (< minRDiv && > rebalanceInterval && funded)', async function () {
+      it('should check upkeep - true (> rebalanceInterval && funded)', async function () {
         await this.fundKsp();
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1810));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        const [deltaA, deltaB, rChange, rDiv] = await this.eph.connect(this.signers.user).delta(this.ep.address);
         const [upkeepNeeded] = await this.kna.connect(this.signers.user).checkUpkeep(ethers.constants.HashZero);
-        assert(rDiv.gte(this.keeperRebalanceMinRDiv) === upkeepNeeded && upkeepNeeded === false);
+        assert(upkeepNeeded === true);
       });
 
-      it('should check upkeep - false (> minRDiv && < rebalanceInterval && funded)', async function () {
+      it('should check upkeep - false (< rebalanceInterval && funded)', async function () {
         await this.fundKsp();
         await this.kna.connect(this.signers.dao).setKeeperRebalanceInterval(100);
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1850));
-        await this.kna.connect(this.signers.user).performUpkeep(ethers.constants.HashZero);
+        await this.kna.connect(this.signers.user).performUpkeep((new ethers.utils.AbiCoder).encode(['address'], [this.ep.address]));
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2000));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        const [deltaA, deltaB, rChange, rDiv] = await this.eph.connect(this.signers.user).delta(this.ep.address);
         const [upkeepNeeded] = await this.kna.connect(this.signers.user).checkUpkeep(ethers.constants.HashZero);
-        assert(upkeepNeeded === false && rDiv.gte(this.keeperRebalanceMinRDiv));
-      });
-
-      it('should check upkeep - true (> minRDiv && > rebalanceInterval && funded)', async function () {
-        await this.fundKsp();
-        const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
-        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1850));
-        const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
-        assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        const [deltaA, deltaB, rChange, rDiv] = await this.eph.connect(this.signers.user).delta(this.ep.address);
-        const [upkeepNeeded] = await this.kna.connect(this.signers.user).checkUpkeep(ethers.constants.HashZero);
-        assert(rDiv.gte(this.keeperRebalanceMinRDiv) === upkeepNeeded && upkeepNeeded === true);
+        assert(upkeepNeeded === false);
       });
     });
 
@@ -278,7 +265,7 @@ describe('KeeperNetworkAdapter', function () {
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1850));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        await this.kna.connect(this.signers.user).performUpkeep(ethers.constants.HashZero);
+        await this.kna.connect(this.signers.user).performUpkeep((new ethers.utils.AbiCoder).encode(['address'], [this.ep.address]));
         const currentRatioBalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(currentRatioUnbalanced, currentRatioBalanced));
         assert(this.roundEqual(currentRatioBalanced, tranche.targetRatio));
