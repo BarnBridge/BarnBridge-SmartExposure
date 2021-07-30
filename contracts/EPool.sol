@@ -53,7 +53,7 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     event IssuedEToken(address indexed eToken, uint256 amount, uint256 amountA, uint256 amountB, address user);
     event RedeemedEToken(address indexed eToken, uint256 amount, uint256 amountA, uint256 amountB, address user);
     event SetRebalanceMode(uint256 rebalanceMode);
-    event SetMinRDiv(uint256 minRDiv);
+    event SetRebalanceMinRDiv(uint256 minRDiv);
     event SetRebalanceInterval(uint256 interval);
     event SetFeeRate(uint256 feeRate);
     event TransferFees(address indexed feesOwner, uint256 cumulativeFeeA, uint256 cumulativeFeeB);
@@ -156,7 +156,7 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
         uint256 minRDiv
     ) external override onlyDao("EPool: not dao") returns (bool) {
         rebalanceMinRDiv = minRDiv;
-        emit SetMinRDiv(minRDiv);
+        emit SetRebalanceMinRDiv(minRDiv);
         return true;
     }
 

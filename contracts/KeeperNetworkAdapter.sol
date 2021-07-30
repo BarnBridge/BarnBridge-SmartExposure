@@ -24,8 +24,8 @@ contract KeeperNetworkAdapter is ControllerMixin, IKeeperNetworkAdapter {
     uint256 public override keeperRebalanceInterval;
     mapping(IEPool => uint256) public override lastKeeperRebalance;
 
-    event AddEPool(address indexed ePool, address indexed ePoolPeriphery);
-    event RemoveEPool(address indexed ePool);
+    event AddedEPool(address indexed ePool, address indexed ePoolPeriphery);
+    event RemovedEPool(address indexed ePool);
     event SetEPoolHelper(address indexed ePoolHelper);
     event SetKeeperRebalanceInterval(uint256 interval);
 
@@ -71,7 +71,7 @@ contract KeeperNetworkAdapter is ControllerMixin, IKeeperNetworkAdapter {
         }
         ePools.push(ePool);
         peripheryForEPool[ePool] = ePoolPeriphery;
-        emit AddEPool(address(ePool), address(ePoolPeriphery));
+        emit AddedEPool(address(ePool), address(ePoolPeriphery));
         return true;
     }
 
@@ -98,7 +98,7 @@ contract KeeperNetworkAdapter is ControllerMixin, IKeeperNetworkAdapter {
             ePools[i] = ePools[i + 1];
         }
         ePools.pop();
-        emit RemoveEPool(address(ePool));
+        emit RemovedEPool(address(ePool));
         return true;
     }
 

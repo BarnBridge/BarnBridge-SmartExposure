@@ -35,7 +35,7 @@ describe('KeeperNetworkAdapter', function () {
 
     // deploy keeper network adapter
     this.kna = (await deployContract(this.signers.admin, KeeperNetworkAdapterArtifact, [
-      this.controller.address, ethers.constants.AddressZero, ethers.constants.AddressZero, ethers.constants.AddressZero
+      this.controller.address, ethers.constants.AddressZero
     ])) as KeeperNetworkAdapter;
   });
 
@@ -57,24 +57,81 @@ describe('KeeperNetworkAdapter', function () {
     });
   });
 
-  describe('#setEPool', function () {
-    it('should update EPool if msg.sender is dao', async function () {
+  describe('#addEPool', function () {
+    it('should add EPool if msg.sender is dao', async function () {
       await expect(
-        this.kna.connect(this.signers.dao).setEPool('0x0000000000000000000000000000000000000001')
-      ).to.emit(this.kna, 'SetEPool').withArgs('0x0000000000000000000000000000000000000001');
-      expect(await this.kna.connect(this.signers.dao).ePool()).to.equal('0x0000000000000000000000000000000000000001');
+        this.kna.connect(this.signers.dao).addEPool(
+          '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+        )
+      ).to.emit(this.kna, 'AddedEPool').withArgs(
+        '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+      );
+      expect(await this.kna.connect(this.signers.dao).ePools(0)).to.equal('0x0000000000000000000000000000000000000001');
+      expect(
+        await this.kna.connect(this.signers.dao).peripheryForEPool('0x0000000000000000000000000000000000000001')
+      ).to.equal('0x0000000000000000000000000000000000000002');
     });
 
-    it('should update EPool if msg.sender is guardian', async function () {
-      await this.kna.connect(this.signers.guardian).setEPool('0x0000000000000000000000000000000000000001');
-      expect(await this.kna.connect(this.signers.guardian).ePool()).to.equal('0x0000000000000000000000000000000000000001');
+    it('should add EPool if msg.sender is guardian', async function () {
+      await expect(
+        this.kna.connect(this.signers.guardian).addEPool(
+          '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+        )
+      ).to.emit(this.kna, 'AddedEPool').withArgs(
+        '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+      );
+      expect(
+        await this.kna.connect(this.signers.guardian).ePools(0)
+      ).to.equal('0x0000000000000000000000000000000000000001');
+      expect(
+        await this.kna.connect(this.signers.guardian).peripheryForEPool('0x0000000000000000000000000000000000000001')
+      ).to.equal('0x0000000000000000000000000000000000000002');
     });
 
-    it('should fail updating EPool if msg.sender is not dao or guardian', async function () {
+    it('should fail adding EPool if msg.sender is not dao or guardian', async function () {
       await expect(
-        this.kna.connect(this.signers.user).setEPool('0x0000000000000000000000000000000000000001')
+        this.kna.connect(this.signers.user).addEPool(
+          '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+        )
       ).to.be.revertedWith('KeeperNetworkAdapter: not dao or guardian');
     });
+  });
+
+  it('should remove EPool if msg.sender is dao', async function () {
+    await this.kna.connect(this.signers.dao).addEPool(
+      '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+    );
+    await expect(
+      this.kna.connect(this.signers.dao).removeEPool('0x0000000000000000000000000000000000000001')
+    ).to.emit(this.kna, 'RemovedEPool').withArgs('0x0000000000000000000000000000000000000001');
+    expect(
+      await this.kna.connect(this.signers.dao).peripheryForEPool('0x0000000000000000000000000000000000000001')
+    ).to.equal(ethers.constants.AddressZero);
+  });
+
+  it('should remove EPool if msg.sender is guardian', async function () {
+    await this.kna.connect(this.signers.guardian).addEPool(
+      '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+    );
+    await expect(
+      this.kna.connect(this.signers.guardian).removeEPool('0x0000000000000000000000000000000000000001')
+    ).to.emit(this.kna, 'RemovedEPool').withArgs('0x0000000000000000000000000000000000000001');
+    expect(
+      await this.kna.connect(this.signers.guardian).peripheryForEPool('0x0000000000000000000000000000000000000001')
+    ).to.equal(ethers.constants.AddressZero);
+  });
+
+  it('should fail updating EPool if msg.sender is not dao or guardian', async function () {
+    await this.kna.connect(this.signers.dao).addEPool(
+      '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+    );
+    await expect(
+      this.kna.connect(this.signers.user).removeEPool('0x0000000000000000000000000000000000000001')
+    ).to.be.revertedWith('KeeperNetworkAdapter: not dao or guardian');
+    expect(await this.kna.connect(this.signers.dao).ePools(0)).to.equal('0x0000000000000000000000000000000000000001');
+    expect(
+      await this.kna.connect(this.signers.dao).peripheryForEPool('0x0000000000000000000000000000000000000001')
+    ).to.equal('0x0000000000000000000000000000000000000002');
   });
 
   describe('#setEPoolHelper', function () {
@@ -93,26 +150,6 @@ describe('KeeperNetworkAdapter', function () {
     it('should fail updating EPoolHelper if msg.sender is not dao or guardian', async function () {
       await expect(
         this.kna.connect(this.signers.user).setEPoolHelper('0x0000000000000000000000000000000000000001')
-      ).to.be.revertedWith('KeeperNetworkAdapter: not dao or guardian');
-    });
-  });
-
-  describe('#setEPoolPeriphery', function () {
-    it('should update EPoolPeriphery if msg.sender is dao', async function () {
-      await expect(
-        this.kna.connect(this.signers.dao).setEPoolPeriphery('0x0000000000000000000000000000000000000001')
-      ).to.emit(this.kna, 'SetEPoolPeriphery').withArgs('0x0000000000000000000000000000000000000001');
-      expect(await this.kna.connect(this.signers.dao).ePoolPeriphery()).to.equal('0x0000000000000000000000000000000000000001');
-    });
-
-    it('should update EPoolPeriphery if msg.sender is guardian', async function () {
-      await this.kna.connect(this.signers.guardian).setEPoolPeriphery('0x0000000000000000000000000000000000000001');
-      expect(await this.kna.connect(this.signers.guardian).ePoolPeriphery()).to.equal('0x0000000000000000000000000000000000000001');
-    });
-
-    it('should fail updating EPoolPeriphery if msg.sender is not dao or guardian', async function () {
-      await expect(
-        this.kna.connect(this.signers.user).setEPoolPeriphery('0x0000000000000000000000000000000000000001')
       ).to.be.revertedWith('KeeperNetworkAdapter: not dao or guardian');
     });
   });

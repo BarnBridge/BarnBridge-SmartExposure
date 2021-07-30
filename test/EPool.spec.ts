@@ -218,18 +218,18 @@ describe('EPool', function () {
       });
     });
 
-    describe('#setMinRDiv', function () {
+    describe('#setRebalanceMinRDiv', function () {
       it('should set minRDiv if msg.sender is the dao', async function () {
         const minRDiv = parseUnits('0.11', 18);
         await expect(
-          this.ep.connect(this.signers.dao).setMinRDiv(minRDiv)
-        ).to.emit(this.ep, 'SetMinRDiv').withArgs(minRDiv);
+          this.ep.connect(this.signers.dao).setRebalanceMinRDiv(minRDiv)
+        ).to.emit(this.ep, 'SetRebalanceMinRDiv').withArgs(minRDiv);
         assert((await this.ep.connect(this.signers.dao).rebalanceMinRDiv()).eq(minRDiv));
       });
 
       it('should fail setting minRDiv if msg.sender is not the dao', async function () {
         await expect(
-          this.ep.connect(this.signers.guardian).setMinRDiv(this.sFactorA.mul(1))
+          this.ep.connect(this.signers.guardian).setRebalanceMinRDiv(this.sFactorA.mul(1))
         ).to.revertedWith('EPool: not dao');
       });
     });

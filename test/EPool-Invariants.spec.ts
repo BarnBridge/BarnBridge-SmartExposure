@@ -87,7 +87,6 @@ describe('EPool-Invariants', function () {
       await this.ep.connect(this.signers.user).issueExact(this.eToken.address, eTokenAmount);
 
       for (let i = 0; i < 20; i++) {
-        console.log(await this.ep.connect(this.signers.user).getTranches());
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(priceB));
         const preTotalA_ = await this.totalA();
         await this.ep.connect(this.signers.user).rebalance(this.sFactorI);
