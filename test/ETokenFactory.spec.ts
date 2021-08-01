@@ -15,8 +15,10 @@ describe('ETokenFactory', function () {
   before(async function () {
     await signersFixture.bind(this)();
     this.controller = (await deployContract(this.signers.admin, ControllerArtifact, [])) as Controller;
-    await this.controller.connect(this.signers.admin).setDao(this.accounts.dao);
-    await this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian);
+    await Promise.all([
+      this.controller.connect(this.signers.admin).setDao(this.accounts.dao),
+      this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian)
+    ]);
   });
 
   beforeEach(async function () {

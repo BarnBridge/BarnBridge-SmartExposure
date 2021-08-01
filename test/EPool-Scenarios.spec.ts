@@ -147,26 +147,27 @@ describe('EPool - Scenarios', function () {
           await environmentFixture.bind(this)();
 
           // approve TokenA and TokenB for EPool
-          await this.tokenA.connect(this.signers.admin).mint(this.accounts.admin, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.admin).mint(this.accounts.admin, this.sFactorB.mul(100000));
-          await this.tokenA.connect(this.signers.admin).approve(this.ep.address, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.admin).approve(this.ep.address, this.sFactorB.mul(100000));
+          await Promise.all([
+            this.tokenA.connect(this.signers.admin).mint(this.accounts.admin, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.admin).mint(this.accounts.admin, this.sFactorB.mul(100000)),
+            this.tokenA.connect(this.signers.admin).approve(this.ep.address, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.admin).approve(this.ep.address, this.sFactorB.mul(100000)),
 
-          await this.tokenA.connect(this.signers.admin).mint(this.accounts.user, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.admin).mint(this.accounts.user, this.sFactorB.mul(100000));
-          await this.tokenA.connect(this.signers.user).approve(this.ep.address, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.user).approve(this.ep.address, this.sFactorB.mul(100000));
+            this.tokenA.connect(this.signers.admin).mint(this.accounts.user, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.admin).mint(this.accounts.user, this.sFactorB.mul(100000)),
+            this.tokenA.connect(this.signers.user).approve(this.ep.address, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.user).approve(this.ep.address, this.sFactorB.mul(100000)),
 
-          await this.tokenA.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorB.mul(100000));
-          await this.tokenA.connect(this.signers.user2).approve(this.ep.address, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.user2).approve(this.ep.address, this.sFactorB.mul(100000));
+            this.tokenA.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorB.mul(100000)),
+            this.tokenA.connect(this.signers.user2).approve(this.ep.address, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.user2).approve(this.ep.address, this.sFactorB.mul(100000)),
 
-          // initial exchange rate
-          await this.aggregator.connect(this.signers.admin).setAnswer(scenario.initialRate);
-
-          // set controller
-          await this.controller.connect(this.signers.admin).setFeesOwner(this.accounts.feesOwner);
+            // initial exchange rate
+            this.aggregator.connect(this.signers.admin).setAnswer(scenario.initialRate),
+            // set controller
+            this.controller.connect(this.signers.admin).setFeesOwner(this.accounts.feesOwner)
+          ]);
         });
 
         describe('#setFeeRate', function () {

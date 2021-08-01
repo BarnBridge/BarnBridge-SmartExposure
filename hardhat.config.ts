@@ -9,7 +9,7 @@ import '@nomiclabs/hardhat-waffle';
 import 'hardhat-gas-reporter'
 import 'hardhat-typechain';
 import 'solidity-coverage';
-import "@tenderly/hardhat-tenderly"
+import '@tenderly/hardhat-tenderly'
 
 import './tasks/clean';
 import './tasks/accounts';
@@ -46,9 +46,12 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: 31337,
       forking: {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        timeout: 200000,
         url: (process.env.PROVIDER_FORKING) ? process.env.PROVIDER_FORKING : '',
         blockNumber: Number(process.env.BLOCKNUMBER),
-        enabled: (process.env.FORKING == "true") ? true : false
+        enabled: (process.env.FORKING == 'true') ? true : false
       }
     },
     env_network: {
@@ -60,16 +63,16 @@ const config: HardhatUserConfig = {
         initialIndex: Number(process.env.HD_INITIAL),
         count: Number(process.env.HD_COUNT),
       },
-      gas: (process.env.GAS) ? Number(process.env.GAS) : "auto",
-      gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : "auto",
+      gas: (process.env.GAS) ? Number(process.env.GAS) : 'auto',
+      gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : 'auto',
       gasMultiplier: (process.env.GAS_MULTIPLIER) ? Number(process.env.GAS_MULTIPLIER) : 1
     },
     env_network_private_key: {
       url: process.env.PROVIDER,
       chainId: Number(process.env.CHAINID),
       accounts: ['0x' + process.env.PRIVATE_KEY],
-      gas: (process.env.GAS) ? Number(process.env.GAS) : "auto",
-      gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : "auto",
+      gas: (process.env.GAS) ? Number(process.env.GAS) : 'auto',
+      gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : 'auto',
       gasMultiplier: (process.env.GAS_MULTIPLIER) ? Number(process.env.GAS_MULTIPLIER) : 1
     }
   },
@@ -91,6 +94,9 @@ const config: HardhatUserConfig = {
   typechain: {
     outDir: 'typechain',
     target: 'ethers-v5',
+  },
+  mocha: {
+    timeout: 200000
   }
 };
 

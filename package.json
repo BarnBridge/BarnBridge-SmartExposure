@@ -29,14 +29,16 @@
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts .",
     "tenderly:push": "hardhat tenderly:push",
     "test": "hardhat test",
-    "test:forking": "FORKING=true CHAINID=42 hardhat test",
+    "test:forking": "FORKING=true hardhat test",
     "typechain": "hardhat typechain",
     "etherscan:verify": "hardhat verify",
     "deploy-from-env": "hardhat clean && hardhat run --network env_network scripts/deploy.ts",
     "deploy-from-env-key": "hardhat clean && hardhat run --network env_network_private_key scripts/deploy.ts"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "v4.0.0"
+    "@openzeppelin/contracts": "v4.0.0",
+    "@uniswap/v3-core": "1.0.0",
+    "@uniswap/v3-periphery": "1.1.1"
   },
   "devDependencies": {
     "@ethersproject/abstract-signer": "^5.0.6",
@@ -58,7 +60,7 @@
     "ethereum-waffle": "^3.2.0",
     "ethers": "^5.0.17",
     "fs-extra": "^9.0.1",
-    "hardhat": "^2.1.1",
+    "hardhat": "^2.5.0",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-typechain": "^0.3.5",
     "istanbul-combine-updated": "^0.3.0",

@@ -154,31 +154,31 @@ describe('EPoolPeriphery - Scenarios', function () {
           await signersFixture.bind(this)();
           await environmentFixture.bind(this)();
 
-          // approve TokenA and TokenB for EPool
-          await this.tokenA.connect(this.signers.admin).mint(this.accounts.admin, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.admin).mint(this.accounts.admin, this.sFactorB.mul(100000));
-          await this.tokenA.connect(this.signers.admin).approve(this.ep.address, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.admin).approve(this.ep.address, this.sFactorB.mul(100000));
+          await Promise.all([
+            this.tokenA.connect(this.signers.admin).mint(this.accounts.admin, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.admin).mint(this.accounts.admin, this.sFactorB.mul(100000)),
+            this.tokenA.connect(this.signers.admin).approve(this.ep.address, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.admin).approve(this.ep.address, this.sFactorB.mul(100000)),
 
-          await this.tokenA.connect(this.signers.admin).mint(this.accounts.user, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.admin).mint(this.accounts.user, this.sFactorB.mul(100000));
-          await this.tokenA.connect(this.signers.user).approve(this.epp.address, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.user).approve(this.epp.address, this.sFactorB.mul(100000));
+            this.tokenA.connect(this.signers.admin).mint(this.accounts.user, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.admin).mint(this.accounts.user, this.sFactorB.mul(100000)),
+            this.tokenA.connect(this.signers.user).approve(this.epp.address, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.user).approve(this.epp.address, this.sFactorB.mul(100000)),
 
-          await this.tokenA.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorB.mul(100000));
-          await this.tokenA.connect(this.signers.user2).approve(this.epp.address, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.user2).approve(this.epp.address, this.sFactorB.mul(100000));
+            this.tokenA.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorB.mul(100000)),
+            this.tokenA.connect(this.signers.user2).approve(this.epp.address, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.user2).approve(this.epp.address, this.sFactorB.mul(100000)),
 
-          await this.tokenA.connect(this.signers.admin).mint(this.router.address, this.sFactorA.mul(100000));
-          await this.tokenB.connect(this.signers.admin).mint(this.router.address, this.sFactorB.mul(100000));
+            this.tokenA.connect(this.signers.admin).mint(this.router.address, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.admin).mint(this.router.address, this.sFactorB.mul(100000)),
 
-          // initial exchange rate
-          await this.aggregator.connect(this.signers.admin).setAnswer(scenario.initialRate);
-          await this.router.connect(this.signers.admin).setRate(scenario.initialRate);
-
-          // set controller
-          await this.controller.connect(this.signers.admin).setFeesOwner(this.accounts.feesOwner);
+            // initial exchange rate
+            this.aggregator.connect(this.signers.admin).setAnswer(scenario.initialRate),
+            this.router.connect(this.signers.admin).setRate(scenario.initialRate),
+            // set controller
+            this.controller.connect(this.signers.admin).setFeesOwner(this.accounts.feesOwner)
+          ]);
 
           await Promise.all(scenario.tranches.map(async (tranche: any) => {
             await this.ep.connect(this.signers.admin).addTranche(tranche.targetRatio, tranche.name, tranche.symbol);

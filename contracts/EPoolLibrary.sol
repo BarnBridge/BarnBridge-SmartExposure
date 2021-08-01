@@ -36,11 +36,11 @@ library EPoolLibrary {
 
     /**
      * @notice Returns the deviation of reserveA and reserveB from target ratio
-     * currentRatio > targetRatio: release TokenA liquidity and add TokenB liquidity
-     * currentRatio < targetRatio: add TokenA liquidity and release TokenB liquidity
+     * currentRatio >= targetRatio: release TokenA liquidity and add TokenB liquidity --> rChange = 0
+     * currentRatio < targetRatio: add TokenA liquidity and release TokenB liquidity --> rChange = 1
      * deltaA := abs(t.reserveA, (t.reserveB / rate * t.targetRatio)) / (1 + t.targetRatio)
      * deltaB := deltaA * rate
-     * rChange := 1 if currentRatio < targetRatio, 2 if currentRatio >= targetRatio
+     * rChange := 0 if currentRatio >= targetRatio, 1 if currentRatio < targetRatio
      * rDiv := 1 - (currentRatio / targetRatio)
      */
     function trancheDelta(

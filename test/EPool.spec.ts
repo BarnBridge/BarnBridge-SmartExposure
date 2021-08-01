@@ -16,8 +16,10 @@ describe('EPool', function () {
   before(async function () {
     await signersFixture.bind(this)();
     await environmentFixture.bind(this)();
-    await this.controller.connect(this.signers.admin).setDao(this.accounts.dao);
-    await this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian);
+    await Promise.all([
+      this.controller.connect(this.signers.admin).setDao(this.accounts.dao),
+      this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian)
+    ]);
   });
 
   describe('#setController', function () {
@@ -104,10 +106,12 @@ describe('EPool', function () {
       await environmentFixture.bind(this)();
 
       // approve TokenA and TokenB for EPool
-      await this.tokenA.connect(this.signers.admin).approve(this.ep.address, this.sFactorA.mul(2));
-      await this.tokenB.connect(this.signers.admin).approve(this.ep.address, this.sFactorB.mul(2));
-      await this.tokenA.connect(this.signers.user).approve(this.ep.address, this.sFactorA.mul(5000));
-      await this.tokenB.connect(this.signers.user).approve(this.ep.address, this.sFactorB.mul(5000));
+      await Promise.all([
+        this.tokenA.connect(this.signers.admin).approve(this.ep.address, this.sFactorA.mul(2)),
+        this.tokenB.connect(this.signers.admin).approve(this.ep.address, this.sFactorB.mul(2)),
+        this.tokenA.connect(this.signers.user).approve(this.ep.address, this.sFactorA.mul(5000)),
+        this.tokenB.connect(this.signers.user).approve(this.ep.address, this.sFactorB.mul(5000))
+      ]);
 
       if (this.localRun || this.forking) {
         // initial exchange rate
@@ -125,8 +129,10 @@ describe('EPool', function () {
       const eTokenAddr = await this.ep.connect(this.signers.admin).tranchesByIndex(0);
       this.eToken = new ethers.Contract(eTokenAddr, ETokenArtifact.abi) as EToken;
 
-      await this.controller.connect(this.signers.admin).setDao(this.accounts.dao);
-      await this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian);
+      await Promise.all([
+        this.controller.connect(this.signers.admin).setDao(this.accounts.dao),
+        this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian)
+      ]);
     });
 
     describe('#setFeeRate', function () {

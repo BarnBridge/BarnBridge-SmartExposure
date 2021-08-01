@@ -8,16 +8,21 @@ import {
   TestERC20, TestEPoolLibrary
 } from '../typechain';
 
-declare module "mocha" {
+declare module 'mocha' {
   export interface Context {
-    accounts: Accounts;
-    signers: Signers;
+    networkName: string;
     forking: boolean;
     localRun: boolean;
+    accounts: Accounts;
+    signers: Signers;
     sFactorA: BigNumber;
     sFactorB: BigNumber;
     sFactorE: BigNumber;
     sFactorI: BigNumber;
+    decA: number;
+    decB: number;
+    decE: number;
+    decI: number;
     controller: Controller;
     ep: EPool;
     eph: EPoolHelper;
@@ -35,5 +40,6 @@ declare module "mocha" {
     eToken3: EToken;
     tokenA: TestERC20;
     tokenB: TestERC20;
+    roundEqual: (a: BigNumber, b: BigNumber) => boolean
   }
 }

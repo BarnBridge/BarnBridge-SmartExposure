@@ -16,8 +16,10 @@ describe('EPoolPeriphery', function () {
   before(async function () {
     await signersFixture.bind(this)();
     await environmentFixture.bind(this)();
-    await this.controller.connect(this.signers.admin).setDao(this.accounts.dao);
-    await this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian);
+    await Promise.all([
+      this.controller.connect(this.signers.admin).setDao(this.accounts.dao),
+      this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian)
+    ]);
   });
 
   describe('#setController', function () {
@@ -95,18 +97,20 @@ describe('EPoolPeriphery', function () {
       await environmentFixture.bind(this)();
 
       // approve TokenA and TokenB for EPoolPeriphery
-      await this.tokenA.connect(this.signers.admin).approve(this.epp.address, this.sFactorA.mul(2));
-      await this.tokenB.connect(this.signers.admin).approve(this.epp.address, this.sFactorB.mul(2));
-      await this.tokenA.connect(this.signers.user).approve(this.epp.address, this.sFactorA.mul(5000));
-      await this.tokenB.connect(this.signers.user).approve(this.epp.address, this.sFactorB.mul(5000));
+      await Promise.all([
+        this.tokenA.connect(this.signers.admin).approve(this.epp.address, this.sFactorA.mul(2)),
+        this.tokenB.connect(this.signers.admin).approve(this.epp.address, this.sFactorB.mul(2)),
+        this.tokenA.connect(this.signers.user).approve(this.epp.address, this.sFactorA.mul(5000)),
+        this.tokenB.connect(this.signers.user).approve(this.epp.address, this.sFactorB.mul(5000))
+      ]);
 
       if (this.localRun || this.forking) {
         // initial exchange rate
-        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1800));
+        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2400));
       }
       if (this.localRun) {
         // initial exchange rate
-        await this.router.connect(this.signers.admin).setRate(this.sFactorI.mul(1800));
+        await this.router.connect(this.signers.admin).setRate(this.sFactorI.mul(2400));
       }
 
       // 30/70 interpreted as 30/70 split --> 30% value in TokenA, 70% value in TokenB
@@ -125,15 +129,21 @@ describe('EPoolPeriphery', function () {
 
       // fund keeper subsidy pool
       if (this.localRun) {
-        await this.tokenA.connect(this.signers.admin).mint(this.ksp.address, this.sFactorA.mul(2));
-        await this.tokenB.connect(this.signers.admin).mint(this.ksp.address, this.sFactorB.mul(2));
+        await Promise.all([
+          this.tokenA.connect(this.signers.admin).mint(this.ksp.address, this.sFactorA.mul(2)),
+          this.tokenB.connect(this.signers.admin).mint(this.ksp.address, this.sFactorB.mul(2))
+        ]);
       } else {
-        await this.tokenA.connect(this.signers.admin).transfer(this.ksp.address, this.sFactorA.mul(2));
-        await this.tokenB.connect(this.signers.admin).transfer(this.ksp.address, this.sFactorB.mul(2));
+        await Promise.all([
+          this.tokenA.connect(this.signers.admin).transfer(this.ksp.address, this.sFactorA.mul(2)),
+          this.tokenB.connect(this.signers.admin).transfer(this.ksp.address, this.sFactorB.mul(2))
+        ]);
       }
 
-      await this.controller.connect(this.signers.admin).setDao(this.accounts.dao);
-      await this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian);
+      await Promise.all([
+        this.controller.connect(this.signers.admin).setDao(this.accounts.dao),
+        this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian)
+      ]);
 
       this.deadline = (await ethers.provider.getBlock('latest')).timestamp + 600;
     });
@@ -316,20 +326,20 @@ describe('EPoolPeriphery', function () {
       it('should fail rebalancing the EPool via flash swap - excessive slippage', async function () {
         if (!this.forking) { this.skip(); }
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
-        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1850));
+        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2600));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        await this.epp.connect(this.signers.guardian).setMaxFlashSwapSlippage(ethers.utils.parseUnits('0.001', 18)) // 0.1% slippage
+        await this.epp.connect(this.signers.guardian).setMaxFlashSwapSlippage(ethers.utils.parseUnits('0.9', 18)) // -10% slippage
         await expect(
           this.epp.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, this.sFactorI.mul(1))
         ).to.be.revertedWith('EPoolPeriphery: excessive slippage');
-        await this.epp.connect(this.signers.guardian).setMaxFlashSwapSlippage(ethers.utils.parseUnits('20', 18)) // 2000% slippage
+        await this.epp.connect(this.signers.guardian).setMaxFlashSwapSlippage(ethers.utils.parseUnits('1.1', 18)) // 10% slippage
       });
 
       it('should rebalance the EPool via flash swap - rChange == 0', async function () {
         if (!this.forking) { this.skip(); }
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
-        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1850));
+        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2600));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
         await this.epp.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, this.sFactorI.mul(1));
@@ -349,7 +359,7 @@ describe('EPoolPeriphery', function () {
       it('should rebalance the EPool via flash swap - rChange > 0', async function () {
         if (!this.forking) { this.skip(); }
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
-        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1820));
+        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2300));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
         await this.epp.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, this.sFactorI.mul(1));

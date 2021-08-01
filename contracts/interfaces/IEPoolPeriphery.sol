@@ -13,9 +13,9 @@ interface IEPoolPeriphery {
 
     function setController(address _controller) external returns (bool);
 
-    function factory() external view returns (IUniswapV2Factory);
+    function factory() external view returns (address);
 
-    function router() external view returns (IUniswapV2Router01);
+    function router() external view returns (address);
 
     function ePools(address) external view returns (bool);
 

@@ -34,14 +34,16 @@ describe('EPool-Invariants', function () {
         return reserveA.add(reserveB.mul(this.sFactorI).div(rate).mul(this.sFactorA).div(this.sFactorB));
       };
 
-      await this.tokenA.connect(this.signers.admin).mint(this.accounts.user, this.sFactorA.mul('1000000000000000000000'));
-      await this.tokenB.connect(this.signers.admin).mint(this.accounts.user, this.sFactorB.mul('1000000000000000000000'));
-      await this.tokenA.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorA.mul(1));
-      await this.tokenB.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorB.mul(5000));
-      await this.tokenA.connect(this.signers.user).approve(this.ep.address, this.sFactorA.mul('1000000000000000000000'));
-      await this.tokenB.connect(this.signers.user).approve(this.ep.address, this.sFactorB.mul('1000000000000000000000'));
-      await this.tokenA.connect(this.signers.user2).approve(this.ep.address, this.sFactorA.mul(1));
-      await this.tokenB.connect(this.signers.user2).approve(this.ep.address, this.sFactorB.mul(5000));
+      await Promise.all([
+        this.tokenA.connect(this.signers.admin).mint(this.accounts.user, this.sFactorA.mul('1000000000000000000000')),
+        this.tokenB.connect(this.signers.admin).mint(this.accounts.user, this.sFactorB.mul('1000000000000000000000')),
+        this.tokenA.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorA.mul(1)),
+        this.tokenB.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorB.mul(5000)),
+        this.tokenA.connect(this.signers.user).approve(this.ep.address, this.sFactorA.mul('1000000000000000000000')),
+        this.tokenB.connect(this.signers.user).approve(this.ep.address, this.sFactorB.mul('1000000000000000000000')),
+        this.tokenA.connect(this.signers.user2).approve(this.ep.address, this.sFactorA.mul(1)),
+        this.tokenB.connect(this.signers.user2).approve(this.ep.address, this.sFactorB.mul(5000))
+      ]);
     });
 
     xit('should never withdraw more than deposited for constant value', async function () {

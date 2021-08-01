@@ -2,28 +2,33 @@
 pragma solidity ^0.8.1;
 pragma experimental ABIEncoderV2;
 
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
+
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import "./interfaces/IKeeperSubsidyPool.sol";
-import "./interfaces/IUniswapRouterV2.sol";
-import "./interfaces/IUniswapFactory.sol";
-import "./interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IEToken.sol";
 import "./interfaces/IEPoolPeriphery.sol";
 import "./interfaces/IEPool.sol";
 import "./utils/ControllerMixin.sol";
+import "./utils/PoolAddress.sol";
 import "./utils/TokenUtils.sol";
 
 import "./EPoolLibrary.sol";
 
-contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
+contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
     using SafeERC20 for IERC20;
     using TokenUtils for IERC20;
     using TokenUtils for IEToken;
 
     address public immutable override factory;
     address public immutable override router;
+    IQuoter public immutable quoter;
     // Keeper subsidy pool for making rebalancing via flash swaps capital neutral for msg.sender
     IKeeperSubsidyPool public immutable override keeperSubsidyPool;
     // supported EPools by the periphery
@@ -53,12 +58,14 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         address _factory,
         address _router,
         IKeeperSubsidyPool _keeperSubsidyPool,
-        uint256 _maxFlashSwapSlippage
+        uint256 _maxFlashSwapSlippage,
+        IQuoter _quoter
     ) ControllerMixin(_controller) {
         factory = _factory;
         router = _router;
         keeperSubsidyPool = _keeperSubsidyPool;
         maxFlashSwapSlippage = _maxFlashSwapSlippage; // e.g. 1.05e18 -> 5% slippage
+        quoter = _quoter;
     }
 
     /**
@@ -147,19 +154,23 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         // swap part of input amount for amountB
         require(maxInputAmountA >= amountA, "EPoolPeriphery: insufficient max. input");
         uint256 amountAToSwap = maxInputAmountA - amountA;
-        address[] memory path = new address[](2);
-        path[0] = address(tokenA);
-        path[1] = address(tokenB);
         tokenA.approve(router, amountAToSwap);
-        uint256[] memory amountsOut = IUniswapV2Router01(router).swapTokensForExactTokens(
-            amountB, amountAToSwap, path, address(this), deadline
-        );
+        uint256 amountASwappedForAmountB = ISwapRouter(router).exactOutputSingle(ISwapRouter.ExactOutputSingleParams({
+            tokenIn: address(tokenA),
+            tokenOut: address(tokenB),
+            fee: 3000,
+            recipient: address(this),
+            deadline: deadline,
+            amountOut: amountB,
+            amountInMaximum: amountAToSwap,
+            sqrtPriceLimitX96: 0
+        }));
         // do the deposit (TokenA is already approved)
         ePool.issueExact(eToken, amount);
         // transfer EToken to msg.sender
         IERC20(eToken).safeTransfer(msg.sender, amount);
         // refund unused maxInputAmountA -= amountA + amountASwappedForAmountB
-        tokenA.safeTransfer(msg.sender, maxInputAmountA - amountA - amountsOut[0]);
+        tokenA.safeTransfer(msg.sender, maxInputAmountA - amountA - amountASwappedForAmountB);
         emit IssuedEToken(address(ePool), eToken, amount, amountA, amountB, msg.sender);
         return true;
     }
@@ -192,19 +203,23 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         // swap part of input amount for amountB
         require(maxInputAmountB >= amountB, "EPoolPeriphery: insufficient max. input");
         uint256 amountBToSwap = maxInputAmountB - amountB;
-        address[] memory path = new address[](2);
-        path[0] = address(tokenB);
-        path[1] = address(tokenA);
         tokenB.approve(router, amountBToSwap);
-        uint256[] memory amountsOut = IUniswapV2Router01(router).swapTokensForExactTokens(
-            amountA, amountBToSwap, path, address(this), deadline
-        );
+        uint256 amountBSwappedForAmountA = ISwapRouter(router).exactOutputSingle(ISwapRouter.ExactOutputSingleParams({
+            tokenIn: address(tokenB),
+            tokenOut: address(tokenA),
+            fee: 3000,
+            recipient: address(this),
+            deadline: deadline,
+            amountOut: amountB,
+            amountInMaximum: amountBToSwap,
+            sqrtPriceLimitX96: 0
+        }));
         // do the deposit (TokenB is already approved)
         ePool.issueExact(eToken, amount);
         // transfer EToken to msg.sender
         IERC20(eToken).safeTransfer(msg.sender, amount);
         // refund unused maxInputAmountB -= amountB + amountBSwappedForAmountA
-        tokenB.safeTransfer(msg.sender, maxInputAmountB - amountB - amountsOut[0]);
+        tokenB.safeTransfer(msg.sender, maxInputAmountB - amountB - amountBSwappedForAmountA);
         emit IssuedEToken(address(ePool), eToken, amount, amountA, amountB, msg.sender);
         return true;
     }
@@ -237,10 +252,17 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         path[0] = address(tokenB);
         path[1] = address(tokenA);
         tokenB.approve(router, amountB);
-        uint256[] memory amountsOut = IUniswapV2Router01(router).swapExactTokensForTokens(
-            amountB, 0, path, address(this), deadline
-        );
-        uint256 outputA = amountA + amountsOut[1];
+        uint256 amountOut = ISwapRouter(router).exactInputSingle(ISwapRouter.ExactInputSingleParams({
+            tokenIn: address(tokenB),
+            tokenOut: address(tokenA),
+            fee: 3000,
+            recipient: address(this),
+            deadline: deadline,
+            amountIn: amountB,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        }));
+        uint256 outputA = amountA + amountOut;
         require(outputA >= minOutputA, "EPoolPeriphery: insufficient output amount");
         IERC20(tokenA).safeTransfer(msg.sender, outputA);
         emit RedeemedEToken(address(ePool), eToken, amount, amountA, amountB, msg.sender);
@@ -275,10 +297,17 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         path[0] = address(tokenA);
         path[1] = address(tokenB);
         tokenA.approve(router, amountA);
-        uint256[] memory amountsOut = IUniswapV2Router01(router).swapExactTokensForTokens(
-            amountA, 0, path, address(this), deadline
-        );
-        uint256 outputB = amountB + amountsOut[1];
+        uint256 amountOut = ISwapRouter(router).exactInputSingle(ISwapRouter.ExactInputSingleParams({
+            tokenIn: address(tokenA),
+            tokenOut: address(tokenB),
+            fee: 3000,
+            recipient: address(this),
+            deadline: deadline,
+            amountIn: amountA,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        }));
+        uint256 outputB = amountB + amountOut;
         require(outputB >= minOutputB, "EPoolPeriphery: insufficient output amount");
         IERC20(tokenB).safeTransfer(msg.sender, outputB);
         emit RedeemedEToken(address(ePool), eToken, amount, amountA, amountB, msg.sender);
@@ -299,68 +328,70 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
     ) external override returns (bool) {
         require(ePools[address(ePool)], "EPoolPeriphery: unapproved EPool");
         (address tokenA, address tokenB) = (address(ePool.tokenA()), address(ePool.tokenB()));
+        // map TokenA, TokenB to the pools token0, token1 via getPoolKey
+        PoolAddress.PoolKey memory poolKey = PoolAddress.getPoolKey(address(tokenA), address(tokenB), 3000);
+        IUniswapV3Pool pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, poolKey));
+        // map deltaA, deltaB to zeroForOne and amount
+        bool zeroForOne; int256 amount;
+        {
         (uint256 deltaA, uint256 deltaB, uint256 rChange) = EPoolLibrary.delta(
             ePool.getTranches(), ePool.getRate(), ePool.sFactorA(), ePool.sFactorB()
         );
-        IUniswapV2Pair pair = IUniswapV2Pair(IUniswapV2Factory(factory).getPair(address(tokenA), address(tokenB)));
-        // map deltaA, deltaB to amountOut0, amountOut1
-        uint256 amountOut0; uint256 amountOut1;
         if (rChange == 0) {
-            (amountOut0, amountOut1) = (address(tokenA) == pair.token0())
-                ? (uint256(0), deltaB) : (deltaB, uint256(0));
+            // release TokenA, add TokenB to EPool -> flash swap TokenB, repay with TokenA
+            (zeroForOne, amount) = (address(tokenA) == poolKey.token0, SafeCast.toInt256(deltaB) * -1);
         } else {
-            (amountOut0, amountOut1) = (address(tokenA) == pair.token0())
-                ? (deltaA, uint256(0)) : (uint256(0), deltaA);
+            // add TokenA, release TokenB to EPool -> flash swap TokenA, repay with TokenB
+            (zeroForOne, amount) = (address(tokenB) == poolKey.token0, SafeCast.toInt256(deltaA) * -1);
         }
-        bytes memory data = abi.encode(ePool, fracDelta);
-        pair.swap(amountOut0, amountOut1, address(this), data);
+        }
+        pool.swap(address(this), zeroForOne, amount, 0, abi.encode(poolKey, ePool, fracDelta));
         return true;
     }
 
     /**
-     * @notice rebalanceAllWithFlashSwap callback called by the uniswap pair
+     * @notice rebalanceAllWithFlashSwap callback called by the uniswap pool
      * @dev Trusts that deltas are actually forwarded by the EPool.
-     * Verifies that funds are forwarded from flash swap of the uniswap pair.
-     * param sender Address of the flash swap initiator
-     * param amount0
-     * param amount1
+     * Verifies that funds are forwarded from flash swap of the uniswap pool.
+     * @param amount0 amount0Delta
+     * @param amount1 amount1Delta
      * @param data Data forwarded in the flash swap
      */
-    function uniswapV2Call(
-        address /* sender */, // skip sender check, check for forwarded funds by flash swap is sufficient
-        uint256 /* amount0 */,
-        uint256 /* amount1 */,
+    function uniswapV3SwapCallback(
+        int256 amount0,
+        int256 amount1,
         bytes calldata data
     ) external {
-        (IEPool ePool, uint256 fracDelta) = abi.decode(data, (IEPool, uint256));
+        (PoolAddress.PoolKey memory poolKey, IEPool ePool, uint256 fracDelta) = abi.decode(
+            data, (PoolAddress.PoolKey, IEPool, uint256)
+        );
+        require(msg.sender == PoolAddress.computeAddress(factory, poolKey), "EPoolPeriphery: sender is not pool");
         require(ePools[address(ePool)], "EPoolPeriphery: unapproved EPool");
-        // fails if no funds are forwarded in the flash swap callback from the uniswap pair
+        // fails if no funds are forwarded in the flash swap callback from the uniswap pool
         // TokenA, TokenB are already approved
         (uint256 deltaA, uint256 deltaB, uint256 rChange) = ePool.rebalance(fracDelta);
-        address[] memory path = new address[](2); // [0] flash swap repay token, [1] flash lent token
-        uint256 amountsIn; // flash swap repay amount
-        uint256 deltaOut;
-        if (rChange == 0) {
-            // release TokenA, add TokenB to EPool -> flash swap TokenB, repay with TokenA
-            path[0] = address(ePool.tokenA()); path[1] = address(ePool.tokenB());
-            (amountsIn, deltaOut) = (IUniswapV2Router01(router).getAmountsIn(deltaB, path)[0], deltaA);
-        } else {
-            // add TokenA, release TokenB to EPool -> flash swap TokenA, repay with TokenB
-            path[0] = address(ePool.tokenB()); path[1] = address(ePool.tokenA());
-            (amountsIn, deltaOut) = (IUniswapV2Router01(router).getAmountsIn(deltaA, path)[0], deltaB);
-        }
+        (address tokenA, address tokenB) = (address(ePool.tokenA()), address(ePool.tokenB()));
+        require(
+            (poolKey.token0 == tokenA && poolKey.token1 == tokenB)
+                || (poolKey.token0 == tokenB && poolKey.token1 == tokenA),
+            "EPoolPeriphery: token mismatch"
+        );
+        // determine flash swap repay token (input token of swap) and amount received from rebalancing EPool
+        (address tokenIn, uint256 deltaOut) = (rChange == 0) ? (tokenA, deltaA) : (tokenB, deltaB);
+        // determine flash swap repay amount (input amount of swap)
+        uint256 amountIn = (poolKey.token0 == tokenA) ? SafeCast.toUint256(amount0) : SafeCast.toUint256(amount1);
         // if slippage is negative request subsidy, if positive top of KeeperSubsidyPool
-        if (amountsIn > deltaOut) {
+        if (amountIn > deltaOut) {
             require(
-                amountsIn * EPoolLibrary.sFactorI / deltaOut <= maxFlashSwapSlippage,
+                amountIn * EPoolLibrary.sFactorI / deltaOut <= maxFlashSwapSlippage,
                 "EPoolPeriphery: excessive slippage"
             );
-            keeperSubsidyPool.requestSubsidy(path[0], amountsIn - deltaOut);
-        } else if (amountsIn < deltaOut) {
-            IERC20(path[0]).safeTransfer(address(keeperSubsidyPool), deltaOut - amountsIn);
+            keeperSubsidyPool.requestSubsidy(tokenIn, amountIn - deltaOut);
+        } else if (amountIn < deltaOut) {
+            IERC20(tokenIn).safeTransfer(address(keeperSubsidyPool), deltaOut - amountIn);
         }
         // repay flash swap by sending amountIn to pair
-        IERC20(path[0]).safeTransfer(msg.sender, amountsIn);
+        IERC20(tokenIn).safeTransfer(msg.sender, amountIn);
     }
 
     /**
@@ -384,14 +415,14 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         IEPool ePool,
         address eToken,
         uint256 amount
-    ) external view returns (uint256 minTokenA) {
+    ) external returns (uint256 minTokenA) {
         (uint256 amountA, uint256 amountB) = EPoolLibrary.tokenATokenBForEToken(
             ePool.getTranche(eToken), amount, ePool.getRate(), ePool.sFactorA(), ePool.sFactorB()
         );
-        address[] memory path = new address[](2);
-        path[0] = address(ePool.tokenA());
-        path[1] = address(ePool.tokenB());
-        minTokenA = amountA + IUniswapV2Router01(router).getAmountsIn(amountB, path)[0];
+        minTokenA = amountA + quoter.quoteExactOutputSingle(
+            address(ePool.tokenA()), address(ePool.tokenB()), 3000, amountB, 0
+        );
+
     }
 
     // does not include price impact, which would result in a smaller EToken amount
@@ -415,14 +446,13 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         IEPool ePool,
         address eToken,
         uint256 amount
-    ) external view returns (uint256 minTokenB) {
+    ) external returns (uint256 minTokenB) {
         (uint256 amountA, uint256 amountB) = EPoolLibrary.tokenATokenBForEToken(
             ePool.getTranche(eToken), amount, ePool.getRate(), ePool.sFactorA(), ePool.sFactorB()
         );
-        address[] memory path = new address[](2);
-        path[0] = address(ePool.tokenB());
-        path[1] = address(ePool.tokenA());
-        minTokenB = amountB + IUniswapV2Router01(router).getAmountsIn(amountA, path)[0];
+        minTokenB = amountB + quoter.quoteExactOutputSingle(
+            address(ePool.tokenB()), address(ePool.tokenA()), 3000, amountA, 0
+        );
     }
 
     // does not include price impact, which would result in a smaller EToken amount
@@ -446,33 +476,31 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         IEPool ePool,
         address eToken,
         uint256 amount
-    ) external view returns (uint256 maxTokenA) {
+    ) external returns (uint256 maxTokenA) {
         (uint256 amountA, uint256 amountB) = EPoolLibrary.tokenATokenBForEToken(
             ePool.getTranche(eToken), amount, ePool.getRate(), ePool.sFactorA(), ePool.sFactorB()
         );
         uint256 feeRate = ePool.feeRate();
         amountA = amountA - amountA * feeRate / EPoolLibrary.sFactorI;
         amountB = amountB - amountB * feeRate / EPoolLibrary.sFactorI;
-        address[] memory path = new address[](2);
-        path[0] = address(ePool.tokenB());
-        path[1] = address(ePool.tokenA());
-        maxTokenA = amountA + IUniswapV2Router01(router).getAmountsOut(amountB, path)[1];
+        maxTokenA = amountA + quoter.quoteExactInputSingle(
+            address(ePool.tokenB()), address(ePool.tokenA()), 3000, amountB, 0
+        );
     }
 
     function maxOutputAmountBForEToken(
         IEPool ePool,
         address eToken,
         uint256 amount
-    ) external view returns (uint256 maxTokenB) {
+    ) external returns (uint256 maxTokenB) {
         (uint256 amountA, uint256 amountB) = EPoolLibrary.tokenATokenBForEToken(
             ePool.getTranche(eToken), amount, ePool.getRate(), ePool.sFactorA(), ePool.sFactorB()
         );
         uint256 feeRate = ePool.feeRate();
         amountA = amountA - amountA * feeRate / EPoolLibrary.sFactorI;
         amountB = amountB - amountB * feeRate / EPoolLibrary.sFactorI;
-        address[] memory path = new address[](2);
-        path[0] = address(ePool.tokenA());
-        path[1] = address(ePool.tokenB());
-        maxTokenB = amountB + IUniswapV2Router01(router).getAmountsOut(amountA, path)[1];
+        maxTokenB = amountB + quoter.quoteExactInputSingle(
+            address(ePool.tokenA()), address(ePool.tokenB()), 3000, amountA, 0
+        );
     }
 }
