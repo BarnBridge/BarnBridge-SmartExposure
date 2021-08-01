@@ -16,10 +16,8 @@ describe('EPoolPeriphery', function () {
   before(async function () {
     await signersFixture.bind(this)();
     await environmentFixture.bind(this)();
-    await Promise.all([
-      this.controller.connect(this.signers.admin).setDao(this.accounts.dao),
-      this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian)
-    ]);
+    await this.controller.connect(this.signers.admin).setDao(this.accounts.dao);
+    await this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian);
   });
 
   describe('#setController', function () {
@@ -140,10 +138,8 @@ describe('EPoolPeriphery', function () {
         ]);
       }
 
-      await Promise.all([
-        this.controller.connect(this.signers.admin).setDao(this.accounts.dao),
-        this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian)
-      ]);
+      await this.controller.connect(this.signers.admin).setDao(this.accounts.dao);
+      await this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian);
 
       this.deadline = (await ethers.provider.getBlock('latest')).timestamp + 600;
     });

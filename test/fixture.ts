@@ -43,53 +43,24 @@ async function baseFixture(this: any): Promise<void> {
 export async function signersFixture(this: any): Promise<void> {
   await baseFixture.bind(this)();
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  if (this.forking === false) {
-    // get accounts from .env
-    const signers: Signer[] = await ethers.getSigners();
-    this.accounts = {} as Accounts;
-    this.signers = {} as Signers;
-    this.signers.admin = signers[0];
-    this.accounts.admin = await signers[0].getAddress();
-    this.signers.user = signers[1];
-    this.accounts.user = await signers[1].getAddress();
-    this.signers.dao = signers[2];
-    this.accounts.dao = await signers[2].getAddress();
-    this.signers.guardian = signers[3];
-    this.accounts.guardian = await signers[3].getAddress();
-    this.signers.feesOwner = signers[4];
-    this.accounts.feesOwner = await signers[4].getAddress();
-    this.signers.owner = signers[5];
-    this.accounts.owner = await signers[5].getAddress();
-    this.signers.user2 = signers[6];
-    this.accounts.user2 = await signers[6].getAddress();
-  } else {
-    const Admin = '0x0000000000000000000000000000000000000001';
-    const User = '0x0000000000000000000000000000000000000002';
-    // if network fork, get accounts via hardhat_impersonateAccount
-    await Promise.all([
-      network.provider.request({ method: 'hardhat_impersonateAccount', params: [Admin]}),
-      network.provider.request({ method: 'hardhat_impersonateAccount', params: [User]})
-    ]);
-    const signers: Signer[] = await ethers.getSigners();
-    this.accounts = {} as Accounts;
-    this.signers = {} as Signers;
-    this.signers.admin = await ethers.provider.getSigner(Admin);
-    this.accounts.admin = Admin;
-    this.signers.user = await ethers.provider.getSigner(User);
-    this.accounts.user = User;
-    this.signers.dao = signers[2];
-    this.accounts.dao = await signers[2].getAddress();
-    this.signers.guardian = signers[3];
-    this.accounts.guardian = await signers[3].getAddress();
-    this.signers.feesOwner = signers[4];
-    this.accounts.feesOwner = await signers[4].getAddress();
-    this.signers.owner = signers[5];
-    this.accounts.owner = await signers[5].getAddress();
-    this.signers.user2 = signers[6];
-    this.accounts.user2 = await signers[6].getAddress();
-  }
+  // get accounts from .env
+  const signers: Signer[] = await ethers.getSigners();
+  this.accounts = {} as Accounts;
+  this.signers = {} as Signers;
+  this.signers.admin = signers[0];
+  this.accounts.admin = await signers[0].getAddress();
+  this.signers.user = signers[1];
+  this.accounts.user = await signers[1].getAddress();
+  this.signers.dao = signers[2];
+  this.accounts.dao = await signers[2].getAddress();
+  this.signers.guardian = signers[3];
+  this.accounts.guardian = await signers[3].getAddress();
+  this.signers.feesOwner = signers[4];
+  this.accounts.feesOwner = await signers[4].getAddress();
+  this.signers.owner = signers[5];
+  this.accounts.owner = await signers[5].getAddress();
+  this.signers.user2 = signers[6];
+  this.accounts.user2 = await signers[6].getAddress();
 }
 
 export async function environmentFixture(this: any): Promise<void> {
@@ -151,19 +122,39 @@ export async function environmentFixture(this: any): Promise<void> {
       network.provider.request({ method: 'hardhat_setBalance', params: [this.accounts.user, '0x6C6B935B8BBD400000']})
     ]);
     await Promise.all([
-      // fund Admin and User with WETH
-      this.signers.admin.sendTransaction({ to: WETH, value: parseUnits('1000', this.decA) }),
-      this.signers.user.sendTransaction({ to: WETH, value: parseUnits('1000', this.decA) }),
-      // fund Admin and User with DAI
-      this.tokenA.connect(this.signers.admin).approve(this.router.address, ethers.constants.MaxUint256),
-      this.tokenA.connect(this.signers.user).approve(this.router.address, ethers.constants.MaxUint256)
-    ]);
-    await Promise.all([
-      this.router.connect(this.signers.admin).swapTokensForExactTokens(
-        parseUnits('5000', this.decB), parseUnits('50', this.decA), [WETH, DAI], this.accounts.admin, '10000000000000000'
+      // fund Admin and User with 1000 WETH
+      network.provider.send(
+        'hardhat_setStorageAt',
+        [
+          this.tokenA.address,
+          ethers.utils.keccak256((new ethers.utils.AbiCoder).encode(['address', 'uint256'], [this.accounts.admin, '3'])),
+          '0x00000000000000000000000000000000000000000000003635c9adc5dea00000'
+        ]
       ),
-      this.router.connect(this.signers.user).swapTokensForExactTokens(
-        parseUnits('5000', this.decB), parseUnits('50', this.decA), [WETH, DAI], this.accounts.user, '10000000000000000'
+      network.provider.send(
+        'hardhat_setStorageAt',
+        [
+          this.tokenA.address,
+          ethers.utils.keccak256((new ethers.utils.AbiCoder).encode(['address', 'uint256'], [this.accounts.user, '3'])),
+          '0x00000000000000000000000000000000000000000000003635c9adc5dea00000'
+        ]
+      ),
+      // fund Admin and User with 5000 DAI
+      network.provider.send(
+        'hardhat_setStorageAt',
+        [
+          this.tokenB.address,
+          ethers.utils.keccak256((new ethers.utils.AbiCoder).encode(['address', 'uint256'], [this.accounts.admin, '2'])),
+          '0x00000000000000000000000000000000000000000000010f0cf064dd59200000'
+        ]
+      ),
+      network.provider.send(
+        'hardhat_setStorageAt',
+        [
+          this.tokenB.address,
+          ethers.utils.keccak256((new ethers.utils.AbiCoder).encode(['address', 'uint256'], [this.accounts.user, '2'])),
+          '0x00000000000000000000000000000000000000000000010f0cf064dd59200000'
+        ]
       )
     ]);
   }

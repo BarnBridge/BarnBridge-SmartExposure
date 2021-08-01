@@ -34,10 +34,8 @@ describe('KeeperNetworkAdapter', function () {
 
   beforeEach(async function () {
     this.controller = (await deployContract(this.signers.admin, ControllerArtifact, [])) as Controller;
-    await Promise.all([
-      this.controller.connect(this.signers.admin).setDao(this.accounts.dao),
-      this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian)
-    ]);
+    await this.controller.connect(this.signers.admin).setDao(this.accounts.dao);
+    await this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian);
 
     // deploy keeper network adapter
     this.kna = (await deployContract(this.signers.admin, KeeperNetworkAdapterArtifact, [
@@ -225,12 +223,10 @@ describe('KeeperNetworkAdapter', function () {
       );
 
       this.rebalanceMinRDiv = parseUnits('0.02', this.decI);
-      await Promise.all([
-        this.ep.connect(this.signers.admin).setRebalanceMinRDiv(this.rebalanceMinRDiv),
-        // set keeper network adapter
-        this.kna.connect(this.signers.dao).addEPool(this.ep.address, this.epp.address),
-        this.kna.connect(this.signers.dao).setEPoolHelper(this.eph.address)
-      ]);
+      await this.ep.connect(this.signers.admin).setRebalanceMinRDiv(this.rebalanceMinRDiv);
+      // set keeper network adapter
+      await this.kna.connect(this.signers.dao).addEPool(this.ep.address, this.epp.address);
+      await this.kna.connect(this.signers.dao).setEPoolHelper(this.eph.address);
     });
 
     describe('#checkUpkeep', function () {

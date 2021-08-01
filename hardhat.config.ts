@@ -44,11 +44,11 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      chainId: 31337,
+      chainId: 1337,
       forking: {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        timeout: 200000,
+        timeout: 50000,
         url: (process.env.PROVIDER_FORKING) ? process.env.PROVIDER_FORKING : '',
         blockNumber: Number(process.env.BLOCKNUMBER),
         enabled: (process.env.FORKING == 'true') ? true : false
@@ -96,7 +96,7 @@ const config: HardhatUserConfig = {
     target: 'ethers-v5',
   },
   mocha: {
-    timeout: 200000
+    timeout: 50000,
   }
 };
 
