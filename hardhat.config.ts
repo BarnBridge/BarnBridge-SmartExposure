@@ -55,22 +55,22 @@ const config: HardhatUserConfig = {
       }
     },
     env_network: {
-      url: process.env.PROVIDER,
-      chainId: Number(process.env.CHAINID),
+      url: (process.env.PROVIDER) ? process.env.PROVIDER : '',
+      chainId: (process.env.CHAINID) ? Number(process.env.CHAINID) : undefined,
       accounts: {
         mnemonic: (process.env.MNEMONIC) ? process.env.MNEMONIC : '',
-        path: process.env.HD_PATH,
-        initialIndex: Number(process.env.HD_INITIAL),
-        count: Number(process.env.HD_COUNT),
+        path: "m/44'/60'/0'/0",
+        initialIndex: 0,
+        count: 20,
       },
       gas: (process.env.GAS) ? Number(process.env.GAS) : 'auto',
       gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : 'auto',
       gasMultiplier: (process.env.GAS_MULTIPLIER) ? Number(process.env.GAS_MULTIPLIER) : 1
     },
     env_network_private_key: {
-      url: process.env.PROVIDER,
-      chainId: Number(process.env.CHAINID),
-      accounts: ['0x' + process.env.PRIVATE_KEY],
+      url: (process.env.PROVIDER) ? process.env.PROVIDER : '',
+      chainId: (process.env.CHAINID) ? Number(process.env.CHAINID) : undefined,
+      accounts: (process.env.PRIVATE_KEY) ? ['0x' + process.env.PRIVATE_KEY] : [],
       gas: (process.env.GAS) ? Number(process.env.GAS) : 'auto',
       gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : 'auto',
       gasMultiplier: (process.env.GAS_MULTIPLIER) ? Number(process.env.GAS_MULTIPLIER) : 1
