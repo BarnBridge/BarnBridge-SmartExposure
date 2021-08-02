@@ -72,8 +72,6 @@ export async function environmentFixture(this: any): Promise<void> {
     UniswapV2Factory, UniswapV2Router02, WETH, DAI
   } = NETWORK_ENV[this.networkName as keyof typeof NETWORK_ENV] || {};
 
-  console.log(WETH, DAI);
-
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   if (this.localRun) {
