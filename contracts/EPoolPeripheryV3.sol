@@ -17,9 +17,12 @@ import "./interfaces/IEPoolPeriphery.sol";
 import "./interfaces/IEPool.sol";
 import "./utils/ControllerMixin.sol";
 import "./utils/PoolAddress.sol";
+import "./utils/TickMath.sol";
 import "./utils/TokenUtils.sol";
 
 import "./EPoolLibrary.sol";
+
+import "hardhat/console.sol";
 
 contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
     using SafeERC20 for IERC20;
@@ -210,7 +213,7 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
             fee: 3000,
             recipient: address(this),
             deadline: deadline,
-            amountOut: amountB,
+            amountOut: amountA,
             amountInMaximum: amountBToSwap,
             sqrtPriceLimitX96: 0
         }));
@@ -345,7 +348,14 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
             (zeroForOne, amount) = (address(tokenB) == poolKey.token0, SafeCast.toInt256(deltaA) * -1);
         }
         }
-        pool.swap(address(this), zeroForOne, amount, 0, abi.encode(poolKey, ePool, fracDelta));
+
+        pool.swap(
+            address(this),
+            zeroForOne,
+            amount,
+            ((zeroForOne) ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1),
+            abi.encode(poolKey, ePool, fracDelta)
+        );
         return true;
     }
 
@@ -362,6 +372,8 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
         int256 amount1,
         bytes calldata data
     ) external {
+        console.logInt(amount0);
+        console.logInt(amount1);
         (PoolAddress.PoolKey memory poolKey, IEPool ePool, uint256 fracDelta) = abi.decode(
             data, (PoolAddress.PoolKey, IEPool, uint256)
         );
@@ -379,7 +391,7 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
         // determine flash swap repay token (input token of swap) and amount received from rebalancing EPool
         (address tokenIn, uint256 deltaOut) = (rChange == 0) ? (tokenA, deltaA) : (tokenB, deltaB);
         // determine flash swap repay amount (input amount of swap)
-        uint256 amountIn = (poolKey.token0 == tokenA) ? SafeCast.toUint256(amount0) : SafeCast.toUint256(amount1);
+        uint256 amountIn = (poolKey.token0 == tokenIn) ? SafeCast.toUint256(amount0) : SafeCast.toUint256(amount1);
         // if slippage is negative request subsidy, if positive top of KeeperSubsidyPool
         if (amountIn > deltaOut) {
             require(

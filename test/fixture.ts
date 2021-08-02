@@ -6,6 +6,7 @@ import ControllerArtifact from '../artifacts/contracts/Controller.sol/Controller
 import EPoolArtifact from '../artifacts/contracts/EPool.sol/EPool.json';
 import EPoolHelperArtifact from '../artifacts/contracts/EPoolHelper.sol/EPoolHelper.json';
 import EPoolPeripheryArtifact from '../artifacts/contracts/EPoolPeriphery.sol/EPoolPeriphery.json';
+import EPoolPeripheryV3Artifact from '../artifacts/contracts/EPoolPeripheryV3.sol/EPoolPeripheryV3.json';
 import KeeperSubsidyPoolArtifact from '../artifacts/contracts/KeeperSubsidyPool.sol/KeeperSubsidyPool.json';
 import ETokenFactoryArtifact from '../artifacts/contracts/ETokenFactory.sol/ETokenFactory.json';
 import TestERC20Artifact from '../artifacts/contracts/mocks/TestERC20.sol/TestERC20.json';
@@ -69,7 +70,7 @@ export async function environmentFixture(this: any): Promise<void> {
   }
 
   const {
-    UniswapV2Factory, UniswapV2Router02, WETH, DAI
+    UniswapV2Factory, UniswapV2Router02, UniswapV3Factory, UniswapV3Router, UniswapV3Quoter, WETH, DAI
   } = NETWORK_ENV[this.networkName as keyof typeof NETWORK_ENV] || {};
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -197,12 +198,24 @@ export async function environmentFixture(this: any): Promise<void> {
     this.ksp.address,
     parseUnits('20', 18) // 2000% slippage
   ])) as EPoolPeriphery;
+  this.eppV3 = (await deployContract(this.signers.admin, EPoolPeripheryV3Artifact, [
+    this.controller.address,
+    UniswapV3Factory,
+    UniswapV3Router,
+    this.ksp.address,
+    parseUnits('20', 18), // 2000% slippage
+    UniswapV3Quoter
+  ])) as EPoolPeriphery;
 
   await Promise.all([
-    // grant access for spp to request subsidy from ksp
+    // grant access for epp to request subsidy from ksp
     this.ksp.connect(this.signers.admin).setBeneficiary(this.epp.address, true),
-    // approve sp for spp
-    this.epp.connect(this.signers.admin).setEPoolApproval(this.ep.address, true)
+    // grant access for eppV3 to request subsidy from ksp
+    this.ksp.connect(this.signers.admin).setBeneficiary(this.eppV3.address, true),
+    // approve ep for epp
+    this.epp.connect(this.signers.admin).setEPoolApproval(this.ep.address, true),
+    // approve ep for eppV3
+    this.eppV3.connect(this.signers.admin).setEPoolApproval(this.ep.address, true)
   ]);
 
   // varying this.decimals for TokenA and TokenB can cause precision when calculating the current ratio

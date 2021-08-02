@@ -2,7 +2,8 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { BigNumber } from 'ethers';
 
 import {
-  EPool, EPoolHelper, EPoolPeriphery, KeeperSubsidyPool, KeeperNetworkAdapter, EToken, ETokenFactory, Controller,
+  EPool, EPoolHelper, EPoolPeriphery, EPoolPeripheryV3,
+  KeeperSubsidyPool, KeeperNetworkAdapter, EToken, ETokenFactory, Controller,
   AggregatorMock, AggregatorV3Interface,
   UniswapRouterMock, IUniswapV2Factory, IUniswapV2Router02,
   TestERC20, TestEPoolLibrary
@@ -48,6 +49,7 @@ export interface Context {
   ep: EPool;
   eph: EPoolHelper;
   epp: EPoolPeriphery;
+  eppV3: EPoolPeripheryV3;
   aggregator: AggregatorMock | AggregatorV3Interface;
   ksp: KeeperSubsidyPool;
   kna: KeeperNetworkAdapter;
