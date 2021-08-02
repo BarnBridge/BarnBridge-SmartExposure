@@ -135,8 +135,8 @@ describe('EPoolPeriphery', function () {
         ]);
       } else {
         await Promise.all([
-          this.tokenA.connect(this.signers.admin).transfer(this.ksp.address, this.sFactorA.mul(2)),
-          this.tokenB.connect(this.signers.admin).transfer(this.ksp.address, this.sFactorB.mul(2))
+          this.tokenA.connect(this.signers.admin).transfer(this.ksp.address, this.sFactorA.mul(5)),
+          this.tokenB.connect(this.signers.admin).transfer(this.ksp.address, this.sFactorB.mul(5))
         ]);
       }
 
@@ -243,10 +243,8 @@ describe('EPoolPeriphery', function () {
       it('should fail depositting into tranche for insufficient max. input', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         const [amountA, amountB] = await this.eph.connect(this.signers.user).tokenATokenBForTokenA(this.ep.address, tranche.eToken, this.amountA);
-        let eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
+        const eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
         if (!this.localRun) {
-          // compensate for rate deviations
-          eTokenAmountIssued = eTokenAmountIssued.div(10);
           const minAmountA = await this.eppV3.connect(this.signers.user).callStatic.minInputAmountAForEToken(this.ep.address, tranche.eToken, eTokenAmountIssued);
           await this.eppV3.connect(this.signers.user).eTokenForMinInputAmountA_Unsafe(this.ep.address, tranche.eToken, minAmountA);
           await expect(
@@ -266,10 +264,8 @@ describe('EPoolPeriphery', function () {
       it('should deposit into tranche', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         const [amountA, amountB] = await this.eph.connect(this.signers.user).tokenATokenBForTokenA(this.ep.address, tranche.eToken, this.amountA);
-        let eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
+        const eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
         if (!this.localRun) {
-          // compensate for rate deviation
-          eTokenAmountIssued = eTokenAmountIssued.div(10);
           const minAmountA = await this.eppV3.connect(this.signers.user).callStatic.minInputAmountAForEToken(this.ep.address, tranche.eToken, eTokenAmountIssued);
           await this.eppV3.connect(this.signers.user).issueForMaxTokenA(
             this.ep.address, tranche.eToken, eTokenAmountIssued, minAmountA, this.deadline
@@ -387,7 +383,6 @@ describe('EPoolPeriphery', function () {
         const balanceOf = await this.eToken.connect(this.signers.user).balanceOf(await this.signers.user.getAddress());
         await this.eToken.connect(this.signers.user).approve(this.eppV3.address, balanceOf);
         if (!this.localRun) {
-          // compensate for rate deviation
           const minOutputA = await this.eppV3.connect(this.signers.user).callStatic.maxOutputAmountAForEToken(this.ep.address, tranche.eToken, balanceOf);
           await expect(
             this.eppV3.connect(this.signers.user).redeemForMinTokenA(
@@ -408,7 +403,6 @@ describe('EPoolPeriphery', function () {
         const balanceOf = await this.eToken.connect(this.signers.user).balanceOf(await this.signers.user.getAddress());
         await this.eToken.connect(this.signers.user).approve(this.eppV3.address, balanceOf );
         if (!this.localRun) {
-          // compensate for rate deviation
           const minOutputA = await this.eppV3.connect(this.signers.user).callStatic.maxOutputAmountAForEToken(this.ep.address, tranche.eToken, balanceOf);
           await this.eppV3.connect(this.signers.user).redeemForMinTokenA(
             this.ep.address, tranche.eToken, balanceOf, minOutputA, this.deadline
@@ -456,11 +450,9 @@ describe('EPoolPeriphery', function () {
       it('should deposit into tranche', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         const [amountA, amountB] = await this.eph.connect(this.signers.user).tokenATokenBForTokenB(this.ep.address, tranche.eToken, this.amountB);
-        let eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
+        const eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
         const balanceOf = await this.eToken.connect(this.signers.user).balanceOf(await this.signers.user.getAddress());
         if (!this.localRun) {
-          // compensate for rate deviation
-          eTokenAmountIssued = eTokenAmountIssued.div(10);
           const minAmountB = await this.eppV3.connect(this.signers.user).callStatic.minInputAmountBForEToken(this.ep.address, tranche.eToken, eTokenAmountIssued);
           await this.eppV3.connect(this.signers.user).eTokenForMinInputAmountB_Unsafe(this.ep.address, tranche.eToken, minAmountB);
           await this.eppV3.connect(this.signers.user).issueForMaxTokenB(
@@ -490,7 +482,6 @@ describe('EPoolPeriphery', function () {
         const balanceOf = await this.eToken.connect(this.signers.user).balanceOf(await this.signers.user.getAddress());
         await this.eToken.connect(this.signers.user).approve(this.eppV3.address, balanceOf);
         if (!this.localRun) {
-          // compensate for rate deviation
           const minOutputB = await this.eppV3.connect(this.signers.user).callStatic.maxOutputAmountBForEToken(this.ep.address, tranche.eToken, balanceOf);
           await this.eppV3.connect(this.signers.user).redeemForMinTokenB(
             this.ep.address, tranche.eToken, balanceOf, minOutputB, this.deadline
