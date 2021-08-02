@@ -11,13 +11,6 @@ export const NETWORK_ENV = {
     'USDC': '0x75b0622cec14130172eae9cf166b92e5c112faff',
     'WBTC': '0xa0a5ad2296b38bd3e3eb59aaeaf1589e8d9a29a9'
   },
-  'mainnet': {
-    // 'AggregatorV3Proxy': '',
-    'UniswapV2Factory': '0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac', // Sushiswap Factory
-    'UniswapV2Router02': '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F', // Sushiswap Router
-    'WETH': '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    'DAI': '0x6b175474e89094c44da98b954eedeac495271d0f'
-  },
   'homestead': {
     'AggregatorV3Proxy_BTC_ETH': '0xdeb288F737066589598e9214E782fa5A8eD689e8', // inverse true
     'AggregatorV3Proxy_USDC_WETH': '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4', // inverse true
