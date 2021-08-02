@@ -50,7 +50,7 @@ const config: HardhatUserConfig = {
         // @ts-ignore
         timeout: 50000,
         url: (process.env.PROVIDER_FORKING) ? process.env.PROVIDER_FORKING : '',
-        blockNumber: Number(process.env.BLOCKNUMBER),
+        blockNumber: (process.env.BLOCKNUMBER) ? Number(process.env.BLOCKNUMBER) : 0,
         enabled: (process.env.FORKING == 'true') ? true : false
       }
     },

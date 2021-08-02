@@ -8,7 +8,7 @@ COPY package.json yarn.lock ./
 RUN yarn install --update-checksums
 
 COPY . .
-RUN cp sample.env .env
+RUN cp bot.env .env
 RUN yarn compile
 
 ENTRYPOINT ["yarn"]

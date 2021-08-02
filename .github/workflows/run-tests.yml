@@ -31,7 +31,7 @@ jobs:
 
       - name: Setup repository
         run: |
-          cp CI.env .env
+          cp ci.env .env
           echo "PROVIDER_FORKING=${{ secrets.PROVIDER_FORKING }}" >> .env
           yarn install --update-checksums
           yarn compile
