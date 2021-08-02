@@ -32,7 +32,7 @@ jobs:
       - name: Setup repository
         run: |
           cp ci.env .env
-          echo "PROVIDER_FORKING=${{ secrets.PROVIDER_FORKING }}" >> .env
+          echo "PROVIDER_FORKING=${{ secrets.PROVIDER_FORKING_MAINNET }}" >> .env
           yarn install --update-checksums
           yarn compile
       - name: Run tests
