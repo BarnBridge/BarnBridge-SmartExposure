@@ -22,8 +22,6 @@ import "./utils/TokenUtils.sol";
 
 import "./EPoolLibrary.sol";
 
-import "hardhat/console.sol";
-
 contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
     using SafeERC20 for IERC20;
     using TokenUtils for IERC20;
@@ -372,8 +370,6 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
         int256 amount1,
         bytes calldata data
     ) external {
-        console.logInt(amount0);
-        console.logInt(amount1);
         (PoolAddress.PoolKey memory poolKey, IEPool ePool, uint256 fracDelta) = abi.decode(
             data, (PoolAddress.PoolKey, IEPool, uint256)
         );

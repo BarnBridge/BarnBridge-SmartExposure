@@ -94,6 +94,8 @@ describe('EPoolPeriphery', function () {
       await signersFixture.bind(this)();
       await environmentFixture.bind(this)();
 
+      if (this.localRun) { this.skip(); }
+
       // approve TokenA and TokenB for EPoolPeriphery
       await Promise.all([
         this.tokenA.connect(this.signers.admin).approve(this.eppV3.address, this.sFactorA.mul(2)),

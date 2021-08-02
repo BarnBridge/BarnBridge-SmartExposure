@@ -200,11 +200,11 @@ export async function environmentFixture(this: any): Promise<void> {
   ])) as EPoolPeriphery;
   this.eppV3 = (await deployContract(this.signers.admin, EPoolPeripheryV3Artifact, [
     this.controller.address,
-    UniswapV3Factory,
-    UniswapV3Router,
+    UniswapV3Factory || ethers.constants.AddressZero,
+    UniswapV3Router || ethers.constants.AddressZero,
     this.ksp.address,
     parseUnits('20', 18), // 2000% slippage
-    UniswapV3Quoter
+    UniswapV3Quoter || ethers.constants.AddressZero
   ])) as EPoolPeriphery;
 
   await Promise.all([
