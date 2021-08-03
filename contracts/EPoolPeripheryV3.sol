@@ -36,6 +36,11 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
     mapping(address => bool) public override ePools;
     // max. allowed slippage between EPool oracle and uniswap when executing a flash swap
     uint256 public override maxFlashSwapSlippage;
+    // supported UniswapV3Pool by the periphery
+    // mapping(address => mapping(address => uint24)) private override _feeTierForPair;
+    mapping(bytes => uint24) private _feeTierForPair;
+
+
 
     event IssuedEToken(
         address indexed ePool, address indexed eToken, uint256 amount, uint256 amountA, uint256 amountB, address user
@@ -45,6 +50,7 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
     );
     event SetEPoolApproval(address indexed ePool, bool approval);
     event SetMaxFlashSwapSlippage(uint256 maxFlashSwapSlippage);
+    event SetFeeTierForPair(address tokenA, address tokenB, uint24 feeTier);
     event RecoveredToken(address token, uint256 amount);
 
     /**
@@ -128,6 +134,20 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
     }
 
     /**
+     * @notice Set fee tier for determining Uniswap V3 pool
+     * @dev Can only be callede by the DAO or the guardian
+     * @param feeTier fee tier in bps (defaults to 3000 if set to 0)
+     * @return True on success
+     */
+    function setFeeTierForPair(
+        address tokenA, address tokenB, uint24 feeTier
+    ) external onlyDaoOrGuardian("EPoolPeriphery: not dao or guardian") returns (bool) {
+        _feeTierForPair[(tokenA > tokenB) ? abi.encode(tokenA, tokenB) : abi.encode(tokenB, tokenA)] = feeTier;
+        emit SetFeeTierForPair(tokenA, tokenB, feeTier);
+        return true;
+    }
+
+    /**
      * @notice Issues an amount of EToken for maximum amount of TokenA
      * @dev Reverts if maxInputAmountA is exceeded. Unused amount of TokenA is refunded to msg.sender.
      * Requires setting allowance for TokenA.
@@ -159,7 +179,7 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
         uint256 amountASwappedForAmountB = ISwapRouter(router).exactOutputSingle(ISwapRouter.ExactOutputSingleParams({
             tokenIn: address(tokenA),
             tokenOut: address(tokenB),
-            fee: 3000,
+            fee: feeTierForPair(address(tokenA), address(tokenB)),
             recipient: address(this),
             deadline: deadline,
             amountOut: amountB,
@@ -208,7 +228,7 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
         uint256 amountBSwappedForAmountA = ISwapRouter(router).exactOutputSingle(ISwapRouter.ExactOutputSingleParams({
             tokenIn: address(tokenB),
             tokenOut: address(tokenA),
-            fee: 3000,
+            fee: feeTierForPair(address(tokenA), address(tokenB)),
             recipient: address(this),
             deadline: deadline,
             amountOut: amountA,
@@ -256,7 +276,7 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
         uint256 amountOut = ISwapRouter(router).exactInputSingle(ISwapRouter.ExactInputSingleParams({
             tokenIn: address(tokenB),
             tokenOut: address(tokenA),
-            fee: 3000,
+            fee: feeTierForPair(address(tokenA), address(tokenB)),
             recipient: address(this),
             deadline: deadline,
             amountIn: amountB,
@@ -301,7 +321,7 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
         uint256 amountOut = ISwapRouter(router).exactInputSingle(ISwapRouter.ExactInputSingleParams({
             tokenIn: address(tokenA),
             tokenOut: address(tokenB),
-            fee: 3000,
+            fee: feeTierForPair(address(tokenA), address(tokenB)),
             recipient: address(this),
             deadline: deadline,
             amountIn: amountA,
@@ -330,7 +350,9 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
         require(ePools[address(ePool)], "EPoolPeriphery: unapproved EPool");
         (address tokenA, address tokenB) = (address(ePool.tokenA()), address(ePool.tokenB()));
         // map TokenA, TokenB to the pools token0, token1 via getPoolKey
-        PoolAddress.PoolKey memory poolKey = PoolAddress.getPoolKey(address(tokenA), address(tokenB), 3000);
+        PoolAddress.PoolKey memory poolKey = PoolAddress.getPoolKey(
+            address(tokenA), address(tokenB), feeTierForPair(tokenA, tokenB)
+        );
         IUniswapV3Pool pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, poolKey));
         // map deltaA, deltaB to zeroForOne and amount
         bool zeroForOne; int256 amount;
@@ -400,6 +422,11 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
         }
         // repay flash swap by sending amountIn to pair
         IERC20(tokenIn).safeTransfer(msg.sender, amountIn);
+    }
+
+    function feeTierForPair(address tokenA, address tokenB) public view returns (uint24 feeTier) {
+        feeTier = _feeTierForPair[(tokenA > tokenB) ? abi.encode(tokenA, tokenB) : abi.encode(tokenB, tokenA)];
+        if (feeTier == 0) feeTier = 3000;
     }
 
     /**

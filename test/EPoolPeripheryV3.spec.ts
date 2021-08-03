@@ -89,6 +89,26 @@ describe('EPoolPeriphery', function () {
     });
   });
 
+  describe('#setFeeTierPoolPair', function () {
+    it('should set fee tier for pair if msg.sender is the dao', async function () {
+      await expect(
+        this.eppV3.connect(this.signers.dao).setFeeTierForPair(this.tokenA.address, this.tokenB.address, 500)
+      ).to.emit(this.eppV3, 'SetFeeTierForPair').withArgs(this.tokenA.address, this.tokenB.address, 500);
+      expect(await this.eppV3.connect(this.signers.dao).feeTierForPair(this.tokenA.address, this.tokenB.address)).to.equal(500);
+    });
+
+    it('should set fee tier for pair if msg.sender is the guardian', async function () {
+      await this.eppV3.connect(this.signers.guardian).setFeeTierForPair(this.tokenA.address, this.tokenB.address, 3000);
+      expect(await this.eppV3.connect(this.signers.guardian).feeTierForPair(this.tokenA.address, this.tokenB.address)).to.equal(3000);
+    });
+
+    it('should fail setting fee tier for pair if msg.sender is not the dao or guardian', async function () {
+      await expect(
+        this.eppV3.connect(this.signers.user).setFeeTierForPair(this.tokenA.address, this.tokenB.address, 3000)
+      ).to.be.revertedWith('EPoolPeriphery: not dao or guardian');
+    });
+  });
+
   describe('integration', function () {
     before(async function () {
       await signersFixture.bind(this)();
