@@ -192,11 +192,13 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
      * @return True on success
      */
     function transferFees() external override returns (bool) {
+        address feesOwner = controller.feesOwner();
+        require(feesOwner != address(0), "EPool: no feesOwner");
         (uint256 _cumulativeFeeA, uint256 _cumulativeFeeB) = (cumulativeFeeA, cumulativeFeeB);
         (cumulativeFeeA, cumulativeFeeB) = (0, 0);
-        tokenA.safeTransfer(controller.feesOwner(), _cumulativeFeeA);
-        tokenB.safeTransfer(controller.feesOwner(), _cumulativeFeeB);
-        emit TransferFees(controller.feesOwner(), _cumulativeFeeA, _cumulativeFeeB);
+        tokenA.safeTransfer(feesOwner, _cumulativeFeeA);
+        tokenB.safeTransfer(feesOwner, _cumulativeFeeB);
+        emit TransferFees(feesOwner, _cumulativeFeeA, _cumulativeFeeB);
         return true;
     }
 
