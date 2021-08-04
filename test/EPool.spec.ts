@@ -83,6 +83,7 @@ describe('EPool', function () {
     });
 
     it('should create a new tranche', async function () {
+      console.log(this.controller.address, this.ep.address, this.epp.address, this.eTokenFactory.address);
       await expect(
         this.ep.connect(this.signers.dao).addTranche(1, '_', '_')
       ).to.emit(this.ep, 'AddedTranche').withArgs(await this.ep.connect(this.signers.dao).tranchesByIndex(0));
