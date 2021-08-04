@@ -6,33 +6,32 @@ import { NETWORK_ENV } from '../network';
 async function main(): Promise<void> {
   const {
     UniswapV2Factory, UniswapV2Router02,
-    // WETH, USDC, WBTC
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
   } = NETWORK_ENV[(await ethers.provider.getNetwork()).name];
 
   const signer = (await ethers.getSigners())[0];
-  const gasPrice = ethers.utils.parseUnits('10', 'gwei');
+  const gasPrice = ethers.utils.parseUnits('1', 'gwei');
 
   // Controller
   const Controller: ContractFactory = await ethers.getContractFactory('Controller');
-  const controller: Contract = await Controller.attach('0x913d3924C2e52b500D5ACc6f6080120045dC507b');
-  // const controller: Contract = await Controller.deploy({ gasPrice });
-  // await controller.deployed();
-  // console.log(`Controller:`);
-  // console.log(`  TxHash:           ${controller.deployTransaction.hash}`);
-  // console.log(`  Gas Used:         ${(await controller.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  // console.log(`  Address:          ${controller.address}`);
+  // const controller: Contract = await Controller.attach('');
+  const controller: Contract = await Controller.deploy({ gasPrice });
+  await controller.deployed();
+  console.log(`Controller:`);
+  console.log(`  TxHash:           ${controller.deployTransaction.hash}`);
+  console.log(`  Gas Used:         ${(await controller.deployTransaction.wait()).gasUsed.toString()} Gwei`);
+  console.log(`  Address:          ${controller.address}`);
 
   // ETokenFactory
-  // const ETokenFactory: ContractFactory = await ethers.getContractFactory('ETokenFactory');
-  // const eTokenFactory: Contract = await ETokenFactory.attach('0x3E2f548954A7F8169486936e2Bb616aabCe979E9');
-  // const eTokenFactory: Contract = await ETokenFactory.deploy(controller.address, { gasPrice });
-  // await eTokenFactory.deployed();
-  // console.log(`ETokenFactory:`);
-  // console.log(`  TxHash:           ${eTokenFactory.deployTransaction.hash}`);
-  // console.log(`  Gas Used:         ${(await eTokenFactory.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  // console.log(`  Address:          ${eTokenFactory.address}`);
+  const ETokenFactory: ContractFactory = await ethers.getContractFactory('ETokenFactory');
+  // const eTokenFactory: Contract = await ETokenFactory.attach('');
+  const eTokenFactory: Contract = await ETokenFactory.deploy(controller.address, { gasPrice });
+  await eTokenFactory.deployed();
+  console.log(`ETokenFactory:`);
+  console.log(`  TxHash:           ${eTokenFactory.deployTransaction.hash}`);
+  console.log(`  Gas Used:         ${(await eTokenFactory.deployTransaction.wait()).gasUsed.toString()} Gwei`);
+  console.log(`  Address:          ${eTokenFactory.address}`);
 
   // EPoolHelper
   const EPoolHelper: ContractFactory = await ethers.getContractFactory('EPoolHelper');
@@ -45,12 +44,12 @@ async function main(): Promise<void> {
 
   // KeeperSubsidyPool
   const KeeperSubsidyPool: ContractFactory = await ethers.getContractFactory('KeeperSubsidyPool');
-  const keeperSubsidyPool: Contract = await KeeperSubsidyPool.attach('0xd45EE2f2B70Df3B7Fb5e9f1053a38205cffCa058');
-  // const keeperSubsidyPool: Contract = await KeeperSubsidyPool.deploy(controller.address, { gasPrice });
-  // console.log(`KeeperSubsidyPool:`);
-  // console.log(`  TxHash:           ${keeperSubsidyPool.deployTransaction.hash}`);
-  // console.log(`  Gas Used:         ${(await keeperSubsidyPool.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  // console.log(`  Address:          ${keeperSubsidyPool.address}`);
+  // const keeperSubsidyPool: Contract = await KeeperSubsidyPool.attach('');
+  const keeperSubsidyPool: Contract = await KeeperSubsidyPool.deploy(controller.address, { gasPrice });
+  console.log(`KeeperSubsidyPool:`);
+  console.log(`  TxHash:           ${keeperSubsidyPool.deployTransaction.hash}`);
+  console.log(`  Gas Used:         ${(await keeperSubsidyPool.deployTransaction.wait()).gasUsed.toString()} Gwei`);
+  console.log(`  Address:          ${keeperSubsidyPool.address}`);
 
   // EPoolPeriphery
   const EPoolPeriphery: ContractFactory = await ethers.getContractFactory('EPoolPeriphery');

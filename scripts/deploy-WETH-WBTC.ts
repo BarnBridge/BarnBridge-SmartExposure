@@ -7,23 +7,23 @@ async function main(): Promise<void> {
   // @ts-ignore
   const { AggregatorV3Proxy_BTC_ETH, WETH, WBTC } = NETWORK_ENV[(await ethers.provider.getNetwork()).name];
   const signer = (await ethers.getSigners())[0];
-  const gasPrice = ethers.utils.parseUnits('11', 'gwei');
+  const gasPrice = ethers.utils.parseUnits('1', 'gwei');
 
   // Controller
   const Controller: ContractFactory = await ethers.getContractFactory('Controller');
-  const controller: Contract = await Controller.attach('0x913d3924C2e52b500D5ACc6f6080120045dC507b');
+  const controller: Contract = await Controller.attach('0xCbCc0dA1c8fC31C45Aa84931338178ada74F1017');
 
   // ETokenFactory
   const ETokenFactory: ContractFactory = await ethers.getContractFactory('ETokenFactory');
-  const eTokenFactory: Contract = await ETokenFactory.attach('0x3E2f548954A7F8169486936e2Bb616aabCe979E9');
+  const eTokenFactory: Contract = await ETokenFactory.attach('0x4018b283aeC2D2287D9578bAB434d35235ec8E8B');
 
   // EPoolHelper
   // const EPoolHelper: ContractFactory = await ethers.getContractFactory('EPoolHelper');
-  // const ePoolHelper: Contract = await EPoolHelper.attach('0x8a63822d8C1BE5590bbF72FB58e69285a776A5dF');
+  // const ePoolHelper: Contract = await EPoolHelper.attach('0x32f8E7FB11432263E545faA368a6a1f8eFB58314');
 
   // EPoolPeriphery
   const EPoolPeriphery: ContractFactory = await ethers.getContractFactory('EPoolPeriphery');
-  const ePoolPeriphery: Contract = await EPoolPeriphery.attach('0x33c8D6f8271675edA1a0e72558d4904C96c7A888');
+  const ePoolPeriphery: Contract = await EPoolPeriphery.attach('0xb9556a673f2e01333570e68d95dDd17d92A0511A');
 
   /* --------------------------------------------------------------------------------------------------------------- */
   /* EPool - WETH / WBTC                                                                                             */
@@ -51,7 +51,7 @@ async function main(): Promise<void> {
   console.log(`  Gas Used:         ${(await tx_fee.wait()).gasUsed.toString()} Gwei`);
 
   console.log(`EPool.setMinRDiv:`);
-  const tx_rDiv = await ePool.connect(signer).setMinRDiv('47619047610000000', { gasPrice }); // 5%
+  const tx_rDiv = await ePool.connect(signer).setMinRDiv('24000000000000000', { gasPrice }); // 5%
   console.log(`  TxHash:           ${tx_rDiv.hash}`);
   console.log(`  Gas Used:         ${(await tx_rDiv.wait()).gasUsed.toString()} Gwei`);
 
