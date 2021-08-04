@@ -12,13 +12,16 @@ import ETokenFactoryArtifact from '../artifacts/contracts/ETokenFactory.sol/ETok
 import TestERC20Artifact from '../artifacts/contracts/mocks/TestERC20.sol/TestERC20.json';
 import AggregatorMockArtifact from '../artifacts/contracts/mocks/AggregatorMock.sol/AggregatorMock.json';
 import UniswapRouterMockArtifact from '../artifacts/contracts/mocks/UniswapRouterMock.sol/UniswapRouterMock.json';
+import UniswapV3RouterMockArtifact from '../artifacts/contracts/mocks/UniswapV3RouterMock.sol/UniswapV3RouterMock.json';
 import IUniswapV2Router02Artifact from '../artifacts/contracts/interfaces/IUniswapRouterV2.sol/IUniswapV2Router02.json';
 import IUniswapV2FactoryArtifact from '../artifacts/contracts/interfaces/IUniswapFactory.sol/IUniswapV2Factory.json';
+import ISwapRouterArtifact from '../artifacts/@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol/ISwapRouter.json';
 
 import { Accounts, Signers } from '../types';
 import {
   Controller, EPool, EPoolHelper, EPoolPeriphery, KeeperSubsidyPool, ETokenFactory,
-  AggregatorMock, UniswapRouterMock, IUniswapV2Router02, IUniswapV2Factory, TestERC20
+  AggregatorMock, UniswapRouterMock, UniswapV3RouterMock, IUniswapV2Router02, IUniswapV2Factory, ISwapRouter,
+  TestERC20
 } from '../typechain';
 
 import { NETWORK_ENV } from '../network';
@@ -90,6 +93,7 @@ export async function environmentFixture(this: any): Promise<void> {
     this.tokenB = (await deployContract(this.signers.admin, TestERC20Artifact, ['T2', 'T2', this.decB])) as TestERC20;
     this.aggregator = (await deployContract(this.signers.admin, AggregatorMockArtifact, [])) as AggregatorMock;
     this.router = (await deployContract(this.signers.admin, UniswapRouterMockArtifact, [this.tokenA.address, this.tokenB.address, this.decA, this.decB])) as UniswapRouterMock;
+    this.routerV3 = (await deployContract(this.signers.admin, UniswapV3RouterMockArtifact, [this.tokenA.address, this.tokenB.address, this.decA, this.decB])) as UniswapV3RouterMock;
     await Promise.all([
       // mint TokenA and TokenB to Admin and User
       this.tokenA.connect(this.signers.admin).mint(this.accounts.admin, this.sFactorA.mul(2)),
@@ -103,6 +107,7 @@ export async function environmentFixture(this: any): Promise<void> {
   } else {
     // attach to Uniswap Router, Uniswap Factory, Aggregator, TokenA and TokenB
     this.router = new ethers.Contract(UniswapV2Router02, IUniswapV2Router02Artifact.abi) as IUniswapV2Router02;
+    this.routerV3 = new ethers.Contract(UniswapV3Router, ISwapRouterArtifact.abi) as ISwapRouter;
     this.factory = new ethers.Contract(UniswapV2Factory, IUniswapV2FactoryArtifact.abi) as IUniswapV2Factory;
     // this.aggregator = new ethers.Contract(AggregatorV3Proxy, AggregatorV3InterfaceArtifact.abi) as AggregatorV3Interface;
     this.aggregator = (await deployContract(this.signers.admin, AggregatorMockArtifact, [])) as AggregatorMock;
@@ -201,7 +206,7 @@ export async function environmentFixture(this: any): Promise<void> {
   this.eppV3 = (await deployContract(this.signers.admin, EPoolPeripheryV3Artifact, [
     this.controller.address,
     UniswapV3Factory || ethers.constants.AddressZero,
-    UniswapV3Router || ethers.constants.AddressZero,
+    this.routerV3.address,
     this.ksp.address,
     parseUnits('20', 18), // 2000% slippage
     UniswapV3Quoter || ethers.constants.AddressZero

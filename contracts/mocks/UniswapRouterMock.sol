@@ -21,7 +21,6 @@ contract UniswapRouterMock {
         rate = _rate;
     }
 
-    // mocks TokenB -> TokenA swap
     function swapExactTokensForTokens(
         uint amountIn,
         uint /* amountOutMin */,
@@ -44,7 +43,6 @@ contract UniswapRouterMock {
         IERC20(path[1]).transfer(to, amounts[1]);
     }
 
-    // mocks TokenA -> TokenB swap
     function swapTokensForExactTokens(
         uint amountOut,
         uint /* amountInMax */,

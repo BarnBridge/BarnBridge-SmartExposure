@@ -5,7 +5,7 @@ import {
   EPool, EPoolHelper, EPoolPeriphery, EPoolPeripheryV3,
   KeeperSubsidyPool, KeeperNetworkAdapter, EToken, ETokenFactory, Controller,
   AggregatorMock, AggregatorV3Interface,
-  UniswapRouterMock, IUniswapV2Factory, IUniswapV2Router02,
+  UniswapRouterMock, UniswapV3RouterMock, IUniswapV2Factory, IUniswapV2Router02, ISwapRouter,
   TestERC20, TestEPoolLibrary
 } from '../typechain';
 
@@ -34,6 +34,7 @@ declare module 'mocha' {
     kna: KeeperNetworkAdapter;
     epl: TestEPoolLibrary;
     router: UniswapRouterMock | IUniswapV2Router02;
+    routerV3: UniswapV3RouterMock | ISwapRouter;
     factory: IUniswapV2Factory;
     eTokenFactory: ETokenFactory;
     eToken: EToken;
