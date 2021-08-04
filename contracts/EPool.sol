@@ -14,8 +14,6 @@ import "./utils/TokenUtils.sol";
 import "./utils/Math.sol";
 import "./EPoolLibrary.sol";
 
-import "hardhat/console.sol";
-
 contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     using SafeERC20 for IERC20;
     using TokenUtils for IERC20;
@@ -237,17 +235,11 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
         string memory eTokenName,
         string memory eTokenSymbol
     ) external override onlyDao("EPool: not dao") returns (bool) {
-        console.log("1");
         require(tranchesByIndex.length < TRANCHE_LIMIT, "EPool: max. tranche count");
-        console.log("2");
         require(targetRatio != 0, "EPool: targetRatio == 0");
-        console.log("3");
         IEToken eToken = eTokenFactory.createEToken(eTokenName, eTokenSymbol);
-        console.log("4");
         tranches[address(eToken)] = Tranche(eToken, 10**eToken.decimals(), 0, 0, targetRatio, 0);
-        console.log("5");
         tranchesByIndex.push(address(eToken));
-        console.log("6");
         emit AddedTranche(address(eToken));
         return true;
     }
