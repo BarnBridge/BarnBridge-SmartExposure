@@ -76,6 +76,12 @@ describe('EPool', function () {
   });
 
   describe('#addTranche', function () {
+    it('should fail creating a new tranche if targetRatio is 0', async function () {
+      await expect(
+        this.ep.connect(this.signers.dao).addTranche(0, '_', '_')
+      ).to.be.revertedWith('EPool: targetRatio == 0');
+    });
+
     it('should create a new tranche', async function () {
       await expect(
         this.ep.connect(this.signers.dao).addTranche(1, '_', '_')
