@@ -1,100 +1,117 @@
-import { ethers } from 'hardhat';
-import { Contract, ContractFactory } from 'ethers';
+import hre from 'hardhat';
+import { Contract } from 'ethers';
+import { config as dotenvConfig } from 'dotenv';
+import { resolve } from 'path';
+dotenvConfig({ path: resolve(__dirname, './.env') });
+
 import { NETWORK_ENV } from '../network';
+import { attachContract, callMethod, deployContract, verifyContract } from './helper';
+
+const { ethers } = hre;
 
 async function main(): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const { AggregatorV3Proxy_BTC_ETH, WETH, WBTC } = NETWORK_ENV[(await ethers.provider.getNetwork()).name];
-  const signer = (await ethers.getSigners())[0];
-  const gasPrice = ethers.utils.parseUnits('1', 'gwei');
+  const {
+    AggregatorV3Proxy_BTC_ETH, WETH, WBTC,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+  } = NETWORK_ENV[(await ethers.provider.getNetwork()).name];
 
-  // Controller
-  const Controller: ContractFactory = await ethers.getContractFactory('Controller');
-  const controller: Contract = await Controller.attach('0xCbCc0dA1c8fC31C45Aa84931338178ada74F1017');
+  const deployer = (await ethers.getSigners())[0];
+  const opts = { gasPrice: ethers.BigNumber.from(process.env.GAS_PRICE) };
 
-  // ETokenFactory
-  const ETokenFactory: ContractFactory = await ethers.getContractFactory('ETokenFactory');
-  const eTokenFactory: Contract = await ETokenFactory.attach('0x4018b283aeC2D2287D9578bAB434d35235ec8E8B');
+  console.log(`Deployment Config:`);
+  console.log(`  Deployer:         ${await deployer.getAddress()}`);
+  console.log(`  Chain Id:         ${process.env.CHAINID}`);
+  console.log(`  Gas Price:        ${ethers.utils.formatUnits(opts.gasPrice, 'gwei')} Gwei\n`);
 
-  // EPoolHelper
-  // const EPoolHelper: ContractFactory = await ethers.getContractFactory('EPoolHelper');
-  // const ePoolHelper: Contract = await EPoolHelper.attach('0x32f8E7FB11432263E545faA368a6a1f8eFB58314');
-
-  // EPoolPeriphery
-  const EPoolPeriphery: ContractFactory = await ethers.getContractFactory('EPoolPeriphery');
-  const ePoolPeriphery: Contract = await EPoolPeriphery.attach('0xb9556a673f2e01333570e68d95dDd17d92A0511A');
+  const controller = await attachContract('Controller', '');
+  const eTokenFactory = await attachContract('ETokenFactory', '');
+  const ePoolPeriphery = await attachContract('EPoolPeriphery', '');
+  const ePoolPeripheryV3 = await attachContract('EPoolPeripheryV3', '');
+  const keeperNetworkAdapter = await attachContract('KeeperNetworkAdapter', '');
 
   /* --------------------------------------------------------------------------------------------------------------- */
-  /* EPool - WETH / WBTC                                                                                             */
+  /* EPool - WETH / USDC                                                                                             */
   /* --------------------------------------------------------------------------------------------------------------- */
+
+  const deployed: Array<{ contractName: string, contract: Contract, constructorParams: Array<any> }> = [];
 
   // EPool
-  const EPool: ContractFactory = await ethers.getContractFactory('EPool');
-  // const ePool: Contract = await EPool.attach('');
-  const ePool: Contract = await EPool.deploy(
-    controller.address, eTokenFactory.address, WETH, WBTC, AggregatorV3Proxy_BTC_ETH, true, { gasPrice }
+  deployed.push({...await deployContract(
+    'EPool', [controller.address, eTokenFactory.address, WETH, WBTC, AggregatorV3Proxy_BTC_ETH, true], opts
+  )});
+  const ePool = deployed[deployed.length - 1].contract;
+
+  // Approve EPool on EPoolPeriphery
+  await callMethod(
+    deployer, 'EPoolPeriphery', ePoolPeriphery.address, 'setEPoolApproval', [ePool.address, true], opts
   );
-  console.log(`EPool:`);
-  console.log(`  TxHash:           ${ePool.deployTransaction.hash}`);
-  console.log(`  Gas Used:         ${(await ePool.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  Address:          ${ePool.address}`);
 
-  console.log(`EPoolPeriphery.setEPoolApproval:`);
-  const tx_approval = await ePoolPeriphery.connect(signer).setEPoolApproval(ePool.address, true, { gasPrice });
-  console.log(`  TxHash:           ${tx_approval.hash}`);
-  console.log(`  Gas Used:         ${(await tx_approval.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`EPool.setFeeRate:`);
-  const tx_fee = await ePool.connect(signer).setFeeRate(ethers.utils.parseUnits('0.005', 18), { gasPrice }); // 0.5%
-  console.log(`  TxHash:           ${tx_fee.hash}`);
-  console.log(`  Gas Used:         ${(await tx_fee.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`EPool.setMinRDiv:`);
-  const tx_rDiv = await ePool.connect(signer).setMinRDiv('24000000000000000', { gasPrice }); // 5%
-  console.log(`  TxHash:           ${tx_rDiv.hash}`);
-  console.log(`  Gas Used:         ${(await tx_rDiv.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`EPool.setRebalanceInterval:`);
-  const tx_interval = await ePool.connect(signer).setRebalanceInterval('86400', { gasPrice }); // every day
-  console.log(`  TxHash:           ${tx_interval.hash}`);
-  console.log(`  Gas Used:         ${(await tx_interval.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`EPool.addTranche`);
-  const tx_tranche_1 = await ePool.connect(signer).addTranche(
-    '1000000000000000000', 'Barnbridge Exposure Token Wrapped-Ether 50% / WBTC 50%', 'bb_ET_WETH50/WBTC50', { gasPrice }
+  // Approve EPool on EPoolPeripheryV3
+  await callMethod(
+    deployer, 'EPoolPeripheryV3', ePoolPeripheryV3.address, 'setEPoolApproval', [ePool.address, true], opts
   );
-  console.log(`  TxHash:           ${tx_tranche_1.hash}`);
-  console.log(`  Gas Used:         ${(await tx_tranche_1.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  EToken:           ${(await ePool.connect(signer).getTranches())[0].eToken }`);
 
-  console.log(`EPool.addTranche: 25/75`);
-  const tx_tranche_2 = await ePool.connect(signer).addTranche(
-    '333333333333333333', 'Barnbridge Exposure Token Wrapped-Ether 25% / WBTC 75%', 'bb_ET_WETH25/WBTC75', { gasPrice }
+  // Set fee rate on EPool
+  await callMethod(
+    deployer, 'EPool', ePool.address, 'setFeeRate', [ethers.utils.parseUnits('0.01', '18')], opts
   );
-  console.log(`  TxHash:           ${tx_tranche_2.hash}`);
-  console.log(`  Gas Used:         ${(await tx_tranche_2.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  EToken:           ${(await ePool.connect(signer).getTranches())[1].eToken }`);
 
-  console.log(`EPool.addTranche: 75/25`);
-  const tx_tranche_3 = await ePool.connect(signer).addTranche(
-    '3000000000000000000', 'Barnbridge Exposure Token Wrapped-Ether 75% / WBTC 25%', 'bb_ET_WETH75/WBTC25', { gasPrice }
+  // Set rebalance min. ratio deviation on EPool
+  await callMethod(
+    deployer, 'EPool', ePool.address, 'setRebalanceMinRDiv', [ethers.utils.parseUnits('0.05', '18')], opts
   );
-  console.log(`  TxHash:           ${tx_tranche_3.hash}`);
-  console.log(`  Gas Used:         ${(await tx_tranche_3.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  EToken:           ${(await ePool.connect(signer).getTranches())[2].eToken }`);
 
-  // KeeperNetworkAdapter
-  // const KeeperNetworkAdapter: ContractFactory = await ethers.getContractFactory('KeeperNetworkAdapter');
-  // // const keeperNetworkAdapter: Contract = await KeeperNetworkAdapter.attach('')
-  // const keeperNetworkAdapter: Contract = await KeeperNetworkAdapter.deploy(
-  //   controller.address, ePool.address, ePoolHelper.address, ePoolPeriphery.address, { gasPrice }
-  // );
-  // await keeperNetworkAdapter.deployed();
-  // console.log(`KeeperNetworkAdapter:`);
-  // console.log(`  TxHash:           ${keeperNetworkAdapter.deployTransaction.hash}`);
-  // console.log(`  Gas Used:         ${(await keeperNetworkAdapter.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  // console.log(`  Address:          ${keeperNetworkAdapter.address}`);
+  // Set rebalance interval on EPool
+  await callMethod(
+    deployer, 'EPool', ePool.address, 'setRebalanceInterval', ['86400'], opts
+  );
+
+  // Create tranche 50 / 50 on EPool
+  await callMethod(
+    deployer,
+    'EPool',
+    ePool.address,
+    'addTranche',
+    ['1000000000000000000', 'Barnbridge Exposure Token Wrapped-Ether 50% / WBTC 50%', 'bb_ET_WETH50/WBTC50'],
+    opts
+  );
+  console.log(`  EToken (50/50):   ${(await ePool.connect(deployer).getTranches())[0].eToken }`);
+
+  // Create tranche 25 / 75 on EPool
+  await callMethod(
+    deployer,
+    'EPool',
+    ePool.address,
+    'addTranche',
+    ['333333333333333333', 'Barnbridge Exposure Token Wrapped-Ether 25% / WBTC 75%', 'bb_ET_WETH25/WBTC75'],
+    opts
+  );
+  console.log(`  EToken (25/75):   ${(await ePool.connect(deployer).getTranches())[1].eToken }`);
+
+  // Create tranche 75 / 25 on EPool
+  await callMethod(
+    deployer,
+    'EPool',
+    ePool.address,
+    'addTranche',
+    ['3000000000000000000', 'Barnbridge Exposure Token Wrapped-Ether 75% / WBTC 25%', 'bb_ET_WETH75/WBTC25'],
+    opts
+  );
+  console.log(`  EToken (75/25):   ${(await ePool.connect(deployer).getTranches())[2].eToken }`);
+
+  // Add EPool on KeeperNetworkAdapter
+  await callMethod(
+    deployer, 'KeeperNetworkAdapter', keeperNetworkAdapter.address, 'addEPool', [ePool.address], opts
+  );
+
+  /* --------------------------------------------------------------------------------------------------------------- */
+  /* Verify contracts on Etherscan                                                                                   */
+  /* --------------------------------------------------------------------------------------------------------------- */
+
+  for (const { contractName, contract, constructorParams } of deployed) {
+    await verifyContract(contractName, contract.address, constructorParams);
+  }
 }
 
 main().then(() => process.exit(0)).catch((error: Error) => { console.error(error); process.exit(1); });

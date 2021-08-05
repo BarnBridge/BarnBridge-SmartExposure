@@ -29,6 +29,7 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
     // supported EPools by the periphery
     mapping(address => bool) public override ePools;
     // max. allowed slippage between EPool oracle and uniswap when executing a flash swap
+    // 1.0e18 is defined as no slippage, 1.03e18 == 3% slippage, if < 1.0e18 then swap always has to make a profit
     uint256 public override maxFlashSwapSlippage;
 
     event IssuedEToken(
@@ -46,7 +47,7 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
      * @param _factory Address of the Uniswap V2 factory
      * @param _router Address of the Uniswap V2 router
      * @param _keeperSubsidyPool Address of keeper subsidiy pool
-     * @param _maxFlashSwapSlippage Max. allowed slippage between EPool oracle and uniswap
+     * @param _maxFlashSwapSlippage Max. allowed slippage EPool oracle vs. Uniswap. See var. decl. for valid inputs.
      */
     constructor(
         IController _controller,
@@ -107,6 +108,7 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
 
     /**
      * @notice Set max. slippage between EPool oracle and uniswap when performing flash swap
+     * See variable declaration for valid inputs.
      * @dev Can only be callede by the DAO or the guardian
      * @param _maxFlashSwapSlippage Max. flash swap slippage
      * @return True on success

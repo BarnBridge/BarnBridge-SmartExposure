@@ -1,129 +1,149 @@
-import { ethers } from 'hardhat';
-import { Contract, ContractFactory } from 'ethers';
+import hre from 'hardhat';
+import { Contract } from 'ethers';
+import { config as dotenvConfig } from 'dotenv';
+import { resolve } from 'path';
+dotenvConfig({ path: resolve(__dirname, './.env') });
 
 import { NETWORK_ENV } from '../network';
+import { callMethod, deployContract, verifyContract } from './helper';
+
+const { ethers } = hre;
 
 async function main(): Promise<void> {
   const {
-    AggregatorV3Proxy, UniswapV2Factory, UniswapV2Router02, WETH, DAI
+    WETH, DAI, AggregatorV3Proxy_DAI_WETH,
+    UniswapV2Factory, UniswapV2Router02,
+    UniswapV3Factory, UniswapV3Router, UniswapV3Quoter
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
   } = NETWORK_ENV[(await ethers.provider.getNetwork()).name];
 
-  const signer = (await ethers.getSigners())[0];
+  const deployer = (await ethers.getSigners())[0];
+  const opts = { gasPrice: ethers.BigNumber.from(process.env.GAS_PRICE) };
+
+  console.log(`Deployment Config:`);
+  console.log(`  Deployer:         ${await deployer.getAddress()}`);
+  console.log(`  Chain Id:         ${process.env.CHAINID}`);
+  console.log(`  Gas Price:        ${ethers.utils.formatUnits(opts.gasPrice, 'gwei')} Gwei\n`);
+
+  /* --------------------------------------------------------------------------------------------------------------- */
+  /* Deploy contracts                                                                                                */
+  /* --------------------------------------------------------------------------------------------------------------- */
+
+  const deployed: Array<{ contractName: string, contract: Contract, constructorParams: Array<any> }> = [];
 
   // Controller
-  const Controller: ContractFactory = await ethers.getContractFactory('Controller');
-  const controller: Contract = await Controller.deploy();
-  await controller.deployed();
-  console.log(`Controller:`);
-  console.log(`  TxHash:           ${controller.deployTransaction.hash}`);
-  console.log(`  Gas Used:         ${(await controller.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  Address:          ${controller.address}`);
+  deployed.push({...await deployContract('Controller', [], opts)});
+  const controller = deployed[deployed.length - 1].contract;
 
   // ETokenFactory
-  const ETokenFactory: ContractFactory = await ethers.getContractFactory('ETokenFactory');
-  const eTokenFactory: Contract = await ETokenFactory.deploy(controller.address);
-  await eTokenFactory.deployed();
-  console.log(`ETokenFactory:`);
-  console.log(`  TxHash:           ${eTokenFactory.deployTransaction.hash}`);
-  console.log(`  Gas Used:         ${(await eTokenFactory.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  Address:          ${eTokenFactory.address}`);
-
-  // EPool
-  const EPool: ContractFactory = await ethers.getContractFactory('EPool');
-  const ePool: Contract = await EPool.deploy(
-    controller.address, eTokenFactory.address, WETH, DAI, AggregatorV3Proxy, true
-  );
-  console.log(`EPool:`);
-  console.log(`  TxHash:           ${ePool.deployTransaction.hash}`);
-  console.log(`  Gas Used:         ${(await ePool.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  Address:          ${ePool.address}`);
+  deployed.push({...await deployContract('ETokenFactory', [controller.address], opts)});
+  const eTokenFactory = deployed[deployed.length - 1].contract;
 
   // EPoolHelper
-  const EPoolHelper: ContractFactory = await ethers.getContractFactory('EPoolHelper');
-  const ePoolHelper: Contract = await EPoolHelper.deploy();
-  console.log(`EPoolHelper:`);
-  console.log(`  TxHash:           ${ePoolHelper.deployTransaction.hash}`);
-  console.log(`  Gas Used:         ${(await ePoolHelper.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  Address:          ${ePoolHelper.address}`);
+  deployed.push({...await deployContract('EPoolHelper', [], opts)});
+  const ePoolHelper = deployed[deployed.length - 1].contract;
 
   // KeeperSubsidyPool
-  const KeeperSubsidyPool: ContractFactory = await ethers.getContractFactory('KeeperSubsidyPool');
-  const keeperSubsidyPool: Contract = await KeeperSubsidyPool.deploy(controller.address);
-  console.log(`KeeperSubsidyPool:`);
-  console.log(`  TxHash:           ${keeperSubsidyPool.deployTransaction.hash}`);
-  console.log(`  Gas Used:         ${(await keeperSubsidyPool.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  Address:          ${keeperSubsidyPool.address}`);
+  deployed.push({...await deployContract('KeeperSubsidyPool', [controller.address], opts)});
+  const keeperSubsidyPool = deployed[deployed.length - 1].contract;
 
   // EPoolPeriphery
-  const EPoolPeriphery: ContractFactory = await ethers.getContractFactory('EPoolPeriphery');
-  const ePoolPeriphery: Contract = await EPoolPeriphery.deploy(
-    controller.address, UniswapV2Factory, UniswapV2Router02, keeperSubsidyPool.address, '11000000000000000' // 1.1%
-  );
-  await ePoolPeriphery.deployed();
-  console.log(`EPoolPeriphery:`);
-  console.log(`  TxHash:           ${ePoolPeriphery.deployTransaction.hash}`);
-  console.log(`  Gas Used:         ${(await ePoolPeriphery.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  Address:          ${ePoolPeriphery.address}`);
+  deployed.push({...await deployContract(
+    'EPoolPeriphery',
+    // 1.03 % --> 3% flash swap slippage
+    [controller.address, UniswapV2Factory, UniswapV2Router02, keeperSubsidyPool.address, '1030000000000000000'],
+    opts
+  )});
+  const ePoolPeriphery = deployed[deployed.length - 1].contract;
 
-  // // KeeperNetworkAdapter
-  const KeeperNetworkAdapter: ContractFactory = await ethers.getContractFactory('KeeperNetworkAdapter');
-  const keeperNetworkAdapter: Contract = await KeeperNetworkAdapter.deploy(
-    controller.address, ePool.address, ePoolHelper.address, ePoolPeriphery.address
-  );
-  await keeperNetworkAdapter.deployed();
-  console.log(`KeeperNetworkAdapter:`);
-  console.log(`  TxHash:           ${keeperNetworkAdapter.deployTransaction.hash}`);
-  console.log(`  Gas Used:         ${(await keeperNetworkAdapter.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  Address:          ${keeperNetworkAdapter.address}`);
+  // EPoolPeripheryV3
+  deployed.push({...await deployContract(
+    'EPoolPeripheryV3',
+    // 1.03 % --> 3% flash swap slippage
+    [controller.address, UniswapV3Factory, UniswapV3Router, keeperSubsidyPool.address, '1030000000000000000', UniswapV3Quoter],
+    opts
+  )});
+  const ePoolPeripheryV3 = deployed[deployed.length - 1].contract;
+
+  // KeeperNetworkAdapter
+  deployed.push({...await deployContract(
+    'KeeperNetworkAdapter', [controller.address, ePoolHelper.address], opts
+  )});
+
+  // EPool - WETH / DAI
+  deployed.push({...await deployContract(
+    'EPool', [controller.address, eTokenFactory.address, WETH, DAI, AggregatorV3Proxy_DAI_WETH, true], opts
+  )});
+  const ePool = deployed[deployed.length - 1].contract;
 
   /* --------------------------------------------------------------------------------------------------------------- */
   /* Set params                                                                                                      */
   /* --------------------------------------------------------------------------------------------------------------- */
 
-  // Initialization
-  console.log(`KeeperSubsidyPool.setBeneficiary:`);
-  const tx_grant = await keeperSubsidyPool.connect(signer).setBeneficiary(ePoolPeriphery.address, true);
-  console.log(`  TxHash:           ${tx_grant.hash}`);
-  console.log(`  Gas Used:         ${(await tx_grant.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`EPoolPeriphery.setEPoolApproval:`);
-  const tx_approval = await ePoolPeriphery.connect(signer).setEPoolApproval(ePool.address, true);
-  console.log(`  TxHash:           ${tx_approval.hash}`);
-  console.log(`  Gas Used:         ${(await tx_approval.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`EPoolPeriphery.setMaxFlashSwapSlippage:`);
-  const tx_slippage = await ePoolPeriphery.connect(signer).setMaxFlashSwapSlippage('11000000000000000'); // 1.1%
-  console.log(`  TxHash:           ${tx_slippage.hash}`);
-  console.log(`  Gas Used:         ${(await tx_slippage.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`KeeperSubsidyPool.addSubsidy:`);
-  const TokenA: ContractFactory = await ethers.getContractFactory('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20');
-  const tokenA: Contract = await TokenA.attach(WETH);
-  const tx_subsidy_1 = await tokenA.connect(signer).transfer(keeperSubsidyPool.address, '1000000000000000000'); // 1 WETH
-  console.log(`  TxHash:           ${tx_subsidy_1.hash}`);
-  console.log(`  Gas Used:         ${(await tx_subsidy_1.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`KeeperSubsidyPool.addSubsidy:`);
-  const TokenB: ContractFactory = await ethers.getContractFactory('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20');
-  const tokenB: Contract = await TokenB.attach(DAI);
-  const tx_subsidy_2 = await tokenB.connect(signer).transfer(keeperSubsidyPool.address, '20000000000000000000'); // 20 DAI
-  console.log(`  TxHash:           ${tx_subsidy_2.hash}`);
-  console.log(`  Gas Used:         ${(await tx_subsidy_2.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`EPool.setFeeRate:`);
-  const tx_fee = await ePool.connect(signer).setFeeRate('0');
-  console.log(`  TxHash:           ${tx_fee.hash}`);
-  console.log(`  Gas Used:         ${(await tx_fee.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`EPool.addTranche:`);
-  const tx_tranche = await ePool.connect(signer).addTranche(
-    '428571428571428540', 'Barnbridge Exposure Token Wrapped-Ether 30% / DAI 70%', 'bb_ET_WETH30/DAI70'
+  // Add EPoolPeriphery as beneficiary on KeeperSubsidyPool
+  await callMethod(
+    deployer, 'KeeperSubsidyPool', keeperSubsidyPool.address, 'setBeneficiary', [ePoolPeriphery.address, true], opts
   );
-  console.log(`  TxHash:           ${tx_tranche.hash}`);
-  console.log(`  Gas Used:         ${(await tx_tranche.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  EToken:           ${(await ePool.connect(signer).getTranches())[0].eToken }`);
+
+  // Add EPoolPeripheryV3 as beneficiary on KeeperSubsidyPool
+  await callMethod(
+    deployer, 'KeeperSubsidyPool', keeperSubsidyPool.address, 'setBeneficiary', [ePoolPeripheryV3.address, true], opts
+  );
+
+  // Transfer 1 WETH to KeeperSubsidyPool
+  await callMethod(
+    deployer,
+    '@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20',
+    WETH,
+    'transfer',
+    [keeperSubsidyPool.address, ethers.utils.parseEther('1')],
+    opts
+  );
+
+  // Transfer 20 DAI to KeeperSubsidyPool
+  await callMethod(
+    deployer,
+    '@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20',
+    DAI,
+    'transfer',
+    [keeperSubsidyPool.address, ethers.utils.parseUnits('20', 18)],
+    opts
+  );
+
+  // Approve EPool on EPoolPeriphery
+  await callMethod(
+    deployer, 'EPoolPeriphery', ePoolPeriphery.address, 'setEPoolApproval', [ePool.address, true], opts
+  );
+
+  // Approve EPool on EPoolPeripheryV3
+  await callMethod(
+    deployer, 'EPoolPeripheryV3', ePoolPeripheryV3.address, 'setEPoolApproval', [ePool.address, true], opts
+  );
+
+  // Set fee rate on EPool
+  await callMethod(
+    deployer, 'EPool', ePool.address, 'setFeeRate', [ethers.utils.parseUnits('0.01', '18')], opts
+  );
+
+  // Create tranche on EPool
+  await callMethod(
+    deployer,
+    'EPool',
+    ePool.address,
+    'addTranche',
+    ['428571428571428540', 'Barnbridge Exposure Token Wrapped-Ether 30% / DAI 70%', 'bb_ET_WETH30/DAI70'],
+    opts
+  );
+  console.log(`  EToken:           ${(await ePool.connect(deployer).getTranches())[0].eToken }`);
+
+  /* --------------------------------------------------------------------------------------------------------------- */
+  /* Verify contracts on Etherscan                                                                                   */
+  /* --------------------------------------------------------------------------------------------------------------- */
+
+  for (const { contractName, contract, constructorParams } of deployed) {
+    await verifyContract(contractName, contract.address, constructorParams);
+  }
 }
 
 main().then(() => process.exit(0)).catch((error: Error) => { console.error(error); process.exit(1); });
