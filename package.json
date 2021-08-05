@@ -2,7 +2,7 @@
   "name": "@barnbridge/BarnBridge-SmartExposure",
   "description": "Solidity implementation of the smart exposure product",
   "version": "0.0.0",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "author": {
     "name": "jo-es"
   },
@@ -17,23 +17,19 @@
     "clean": "hardhat clean",
     "compile": "hardhat compile",
     "coverage": "./scripts/coverage.sh",
-    "coverage:forking": "FORKING=true hardhat coverage --solcoverjs ./.solcover.js --temp artifacts --testfiles \"./test/**/*.ts\"",
+    "coverage:mainnet": "FORKING=true BLOCKNUMBER=12935154 CHAINID=1 hardhat coverage --solcoverjs ./.solcover.js --temp artifacts --testfiles \"./test/**/*.ts\"",
     "coverage:local": "hardhat coverage --solcoverjs ./.solcover.js --temp artifacts --testfiles \"./test/**/*.ts\"",
-    "deploy": "hardhat run scripts/deploy.ts",
-    "deploy:base": "hardhat run scripts/deploy-base.ts",
-    "deploy:WETH_USDC": "hardhat run scripts/deploy-WETH-USDC.ts",
-    "deploy:WETH_WBTC": "hardhat run scripts/deploy-WETH-WBTC.ts",
+    "deploy-from-env": "hardhat clean && hardhat run --network env_network scripts/deploy-all.ts",
+    "deploy-from-env-key": "hardhat clean && hardhat run --network env_network_private_key scripts/deploy-all.ts",
+    "etherscan:verify": "hardhat verify",
     "hardhat": "hardhat",
     "lint": "yarn run lint:sol && yarn run lint:ts",
     "lint:sol": "solhint --config ./.solhint.json --max-warnings 0 \"contracts/**/*.sol\"",
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts .",
     "tenderly:push": "hardhat tenderly:push",
     "test": "hardhat test",
-    "test:forking": "FORKING=true hardhat test",
-    "typechain": "hardhat typechain",
-    "etherscan:verify": "hardhat verify",
-    "deploy-from-env": "hardhat clean && hardhat run --network env_network scripts/deploy.ts",
-    "deploy-from-env-key": "hardhat clean && hardhat run --network env_network_private_key scripts/deploy.ts"
+    "test:mainnet": "FORKING=true BLOCKNUMBER=12935154 CHAINID=1 hardhat test",
+    "typechain": "hardhat typechain"
   },
   "dependencies": {
     "@openzeppelin/contracts": "v4.0.0",

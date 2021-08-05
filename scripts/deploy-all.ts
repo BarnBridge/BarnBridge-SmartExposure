@@ -14,7 +14,6 @@ async function main(): Promise<void> {
 
   // Controller
   const Controller: ContractFactory = await ethers.getContractFactory('Controller');
-  // const controller: Contract = await Controller.attach('');
   const controller: Contract = await Controller.deploy();
   await controller.deployed();
   console.log(`Controller:`);
@@ -33,7 +32,6 @@ async function main(): Promise<void> {
 
   // EPool
   const EPool: ContractFactory = await ethers.getContractFactory('EPool');
-  // const ePool: Contract = await EPool.attach('');
   const ePool: Contract = await EPool.deploy(
     controller.address, eTokenFactory.address, WETH, DAI, AggregatorV3Proxy, true
   );
@@ -44,7 +42,6 @@ async function main(): Promise<void> {
 
   // EPoolHelper
   const EPoolHelper: ContractFactory = await ethers.getContractFactory('EPoolHelper');
-  // const ePoolHelper: Contract = await EPoolHelper.attach('');
   const ePoolHelper: Contract = await EPoolHelper.deploy();
   console.log(`EPoolHelper:`);
   console.log(`  TxHash:           ${ePoolHelper.deployTransaction.hash}`);
@@ -53,7 +50,6 @@ async function main(): Promise<void> {
 
   // KeeperSubsidyPool
   const KeeperSubsidyPool: ContractFactory = await ethers.getContractFactory('KeeperSubsidyPool');
-  // const keeperSubsidyPool: Contract = await KeeperSubsidyPool.attach('');
   const keeperSubsidyPool: Contract = await KeeperSubsidyPool.deploy(controller.address);
   console.log(`KeeperSubsidyPool:`);
   console.log(`  TxHash:           ${keeperSubsidyPool.deployTransaction.hash}`);
@@ -62,10 +58,8 @@ async function main(): Promise<void> {
 
   // EPoolPeriphery
   const EPoolPeriphery: ContractFactory = await ethers.getContractFactory('EPoolPeriphery');
-  // Uniswap Router on Rinkeby
-  // const ePoolPeriphery: Contract = await EPoolPeriphery.attach('');
   const ePoolPeriphery: Contract = await EPoolPeriphery.deploy(
-    controller.address, UniswapV2Factory, UniswapV2Router02, keeperSubsidyPool.address, ethers.utils.parseUnits('0.05', 18) // 5% slippage
+    controller.address, UniswapV2Factory, UniswapV2Router02, keeperSubsidyPool.address, '11000000000000000' // 1.1%
   );
   await ePoolPeriphery.deployed();
   console.log(`EPoolPeriphery:`);
@@ -75,7 +69,6 @@ async function main(): Promise<void> {
 
   // // KeeperNetworkAdapter
   const KeeperNetworkAdapter: ContractFactory = await ethers.getContractFactory('KeeperNetworkAdapter');
-  // const keeperNetworkAdapter: Contract = await KeeperNetworkAdapter.attach('')
   const keeperNetworkAdapter: Contract = await KeeperNetworkAdapter.deploy(
     controller.address, ePool.address, ePoolHelper.address, ePoolPeriphery.address
   );
@@ -101,7 +94,7 @@ async function main(): Promise<void> {
   console.log(`  Gas Used:         ${(await tx_approval.wait()).gasUsed.toString()} Gwei`);
 
   console.log(`EPoolPeriphery.setMaxFlashSwapSlippage:`);
-  const tx_slippage = await ePoolPeriphery.connect(signer).setMaxFlashSwapSlippage('20000000000000000000'); // 2000% - because of kovan
+  const tx_slippage = await ePoolPeriphery.connect(signer).setMaxFlashSwapSlippage('11000000000000000'); // 1.1%
   console.log(`  TxHash:           ${tx_slippage.hash}`);
   console.log(`  Gas Used:         ${(await tx_slippage.wait()).gasUsed.toString()} Gwei`);
 
@@ -120,7 +113,7 @@ async function main(): Promise<void> {
   console.log(`  Gas Used:         ${(await tx_subsidy_2.wait()).gasUsed.toString()} Gwei`);
 
   console.log(`EPool.setFeeRate:`);
-  const tx_fee = await ePool.connect(signer).setFeeRate('50000000000000000');
+  const tx_fee = await ePool.connect(signer).setFeeRate('0');
   console.log(`  TxHash:           ${tx_fee.hash}`);
   console.log(`  Gas Used:         ${(await tx_fee.wait()).gasUsed.toString()} Gwei`);
 

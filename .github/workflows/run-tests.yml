@@ -17,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        test: ['yarn test', 'yarn test:forking']
+        test: ['yarn test', 'yarn test:mainnet']
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
