@@ -113,8 +113,6 @@ Thus, a `rebalance` essentially performs a swap of `TokenA` against `TokenB` (or
 - owns the required amount of tokens (either `deltaA` of `TokenA` or `deltaB` of `TokenB`)
 - has approved `EPool` as `spender` of her tokens
 
-Further, parameter `fracDelta` allows `sender` to define the fraction of the total `deltaA`  and `deltaB` that should be rebalanced. For `fracDelta=1` a full rebalance is executed pushing the exposure of all tranches back to their respective target exposure. If `fracDelta<1` only a partial rebalance is executed pushing the exposure of all tranches proportionally closer to the target exposure.
-
 ### collectFee
 
 Sends the accumulated fees in `TokenA` and `TokenB`, tracked in variables `cumulativeFeeA` and `cumulativeFeeB`, to the `feesOwner`.

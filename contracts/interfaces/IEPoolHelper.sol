@@ -8,7 +8,15 @@ interface IEPoolHelper {
 
     function currentRatio(IEPool ePool, address eToken) external view returns(uint256);
 
-    function delta(IEPool ePool) external view returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv);
+    function trancheDelta(IEPool ePool, address eToken)
+        external
+        view
+        returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv);
+
+    function delta(IEPool ePool)
+        external
+        view
+        returns (uint256 deltaA, uint256 deltaB, uint256 rChange);
 
     function eTokenForTokenATokenB(
         IEPool ePool,

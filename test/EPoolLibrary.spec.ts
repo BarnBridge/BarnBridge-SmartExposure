@@ -9,7 +9,7 @@ import { EToken, TestEPoolLibrary } from '../typechain';
 import { environmentFixture, signersFixture } from './fixture';
 
 const { deployContract } = waffle;
-const { utils: { parseUnits: toUnit } } = ethers;
+const { utils: { parseUnits: toUnit }, BigNumber: { from: toBigNumber }  } = ethers;
 
 describe('EPoolLibrary', function () {
 
@@ -20,51 +20,51 @@ describe('EPoolLibrary', function () {
     // deploy exposure pool library wrapper
     this.epl = (await deployContract(this.signers.admin, TestEPoolLibraryArtifact, [])) as TestEPoolLibrary;
     this.scenarios = [
-      // reserves are 0
+      // reserves are 0, currentRation == targetRatio
       {
         decA: 18,
         decB: 18,
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 18),
         tranches: [
-          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: 1, eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(50/50), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(70/30), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') }
+          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: 0, targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: 0,
         results: {
-          delta: { deltaA: 0, deltaB: 0, rChange: 0, rDiv: 0 },
+          delta: { deltaA: 0, deltaB: 0, rChange: 0 },
           tranches: [
             {
-              currentRatio: ethers.BigNumber.from('428571428571428550'),
-              trancheDelta: { deltaA: 0, deltaB: 0, rChange: 0 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('1648721270700128146'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('599999999999999979'), amountB: ethers.BigNumber.from('1400000000000000018') },
-              tokenAForTokenB: ethers.BigNumber.from('1164977926482447899'),
-              tokenBForTokenA: ethers.BigNumber.from('0'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') }
+              currentRatio: toBigNumber('428571428571428550'),
+              trancheDelta: { deltaA: 0, deltaB: 0, rChange: 0, rDiv: 0 },
+              eTokenForTokenATokenB: toBigNumber('1648721270700128146'),
+              tokenATokenBForEToken: { amountA: toBigNumber('599999999999999979'), amountB: toBigNumber('1400000000000000018') },
+              tokenAForTokenB: toBigNumber('1164977926482447899'),
+              tokenBForTokenA: toBigNumber('0'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('0'), amountB: toBigNumber('0') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('0'), amountB: toBigNumber('0') }
             },
             {
-              currentRatio: ethers.BigNumber.from('1000000000000000000'),
-              trancheDelta: { deltaA: 0, deltaB: 0, rChange: 0 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('2035090330572526020'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('999999999999999999'), amountB: ethers.BigNumber.from('999999999999999999') },
-              tokenAForTokenB: ethers.BigNumber.from('1000000000000000000'),
-              tokenBForTokenA: ethers.BigNumber.from('3141592653589793238'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('1570796326794896619') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('1570796326794896619') }
+              currentRatio: toBigNumber('1000000000000000000'),
+              trancheDelta: { deltaA: 0, deltaB: 0, rChange: 0, rDiv: 0 },
+              eTokenForTokenATokenB: toBigNumber('2035090330572526020'),
+              tokenATokenBForEToken: { amountA: toBigNumber('999999999999999999'), amountB: toBigNumber('999999999999999999') },
+              tokenAForTokenB: toBigNumber('1000000000000000000'),
+              tokenBForTokenA: toBigNumber('3141592653589793238'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('1570796326794896619') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('1570796326794896619') }
             },
             {
-              currentRatio: ethers.BigNumber.from('2333333333333333500'),
-              trancheDelta: { deltaA: 0, deltaB: 0, rChange: 0 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('2420717761749361493'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('1400000000000000028'), amountB: ethers.BigNumber.from('599999999999999969') },
-              tokenAForTokenB: ethers.BigNumber.from('6342657599737772668'),
-              tokenBForTokenA: ethers.BigNumber.from('1346396851538482720'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('942477796076937924') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('942477796076937924') }
+              currentRatio: toBigNumber('2333333333333333500'),
+              trancheDelta: { deltaA: 0, deltaB: 0, rChange: 0, rDiv: 0 },
+              eTokenForTokenATokenB: toBigNumber('2420717761749361493'),
+              tokenATokenBForEToken: { amountA: toBigNumber('1400000000000000028'), amountB: toBigNumber('599999999999999969') },
+              tokenAForTokenB: toBigNumber('6342657599737772668'),
+              tokenBForTokenA: toBigNumber('1346396851538482720'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('942477796076937924') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('942477796076937924') }
             }
           ]
         }
@@ -76,44 +76,44 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 18),
         tranches: [
-          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: 1, eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') }
+          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: toUnit('1', 18),
         results: {
-          delta: { deltaA: ethers.BigNumber.from('705300000000000014988'), deltaB: ethers.BigNumber.from('705300000000000014988'), rChange: 1, rDiv: 0 },
+          delta: { deltaA: toBigNumber('705300000000000014988'), deltaB: toBigNumber('705300000000000014988'), rChange: 1 },
           tranches: [
             {
               currentRatio: 0,
-              trancheDelta: { deltaA: ethers.BigNumber.from('299999999999999989'), deltaB: ethers.BigNumber.from('299999999999999989'), rChange: 1 },
+              trancheDelta: { deltaA: toBigNumber('299999999999999989'), deltaB: toBigNumber('299999999999999989'), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
               eTokenForTokenATokenB: 2,
-              tokenATokenBForEToken: { amountA: 0, amountB: ethers.BigNumber.from('1414213562373095048000000000000000000') },
-              tokenAForTokenB: ethers.BigNumber.from('1164977926482447899'),
-              tokenBForTokenA: ethers.BigNumber.from('0'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') }
+              tokenATokenBForEToken: { amountA: 0, amountB: toBigNumber('1414213562373095048000000000000000000') },
+              tokenAForTokenB: toBigNumber('1164977926482447899'),
+              tokenBForTokenA: toBigNumber('0'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('0'), amountB: toBigNumber('0') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('0'), amountB: toBigNumber('0') }
             },
             {
               currentRatio: 0,
-              trancheDelta: { deltaA: toUnit('5', 18), deltaB: toUnit('5', 18), rChange: 1 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('41415926535897932300000'),
-              tokenATokenBForEToken: { amountA: 0, amountB: ethers.BigNumber.from('141421356237300') },
-              tokenAForTokenB: ethers.BigNumber.from('1000000000000000000'),
-              tokenBForTokenA: ethers.BigNumber.from('3141592653589793238'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('1570796326794896619') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('1570796326794896619') }
+              trancheDelta: { deltaA: toUnit('5', 18), deltaB: toUnit('5', 18), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
+              eTokenForTokenATokenB: toBigNumber('41415926535897932300000'),
+              tokenATokenBForEToken: { amountA: 0, amountB: toBigNumber('141421356237300') },
+              tokenAForTokenB: toBigNumber('1000000000000000000'),
+              tokenBForTokenA: toBigNumber('3141592653589793238'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('1570796326794896619') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('1570796326794896619') }
             },
             {
               currentRatio: 0,
-              trancheDelta: { deltaA: ethers.BigNumber.from('700000000000000014999'), deltaB: ethers.BigNumber.from('700000000000000014999'), rChange: 1 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('99617866194830246'),
-              tokenATokenBForEToken: { amountA: 0, amountB: ethers.BigNumber.from('83189033080770296000') },
-              tokenAForTokenB: ethers.BigNumber.from('6342657599737772668'),
-              tokenBForTokenA: ethers.BigNumber.from('1346396851538482720'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('942477796076937924') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('942477796076937924') }
+              trancheDelta: { deltaA: toBigNumber('700000000000000014999'), deltaB: toBigNumber('700000000000000014999'), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
+              eTokenForTokenATokenB: toBigNumber('99617866194830246'),
+              tokenATokenBForEToken: { amountA: 0, amountB: toBigNumber('83189033080770296000') },
+              tokenAForTokenB: toBigNumber('6342657599737772668'),
+              tokenBForTokenA: toBigNumber('1346396851538482720'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('942477796076937924') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('942477796076937924') }
             }
           ]
         }
@@ -125,44 +125,44 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 18),
         tranches: [
-          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: 1, eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') }
+          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('2', 18),
         feeRate: toUnit('0.05', 18),
         results: {
-          delta: { deltaA: ethers.BigNumber.from('352650000000000007493'), deltaB: ethers.BigNumber.from('705300000000000014986'), rChange: 1, rDiv: 0 },
+          delta: { deltaA: toBigNumber('352650000000000007493'), deltaB: toBigNumber('705300000000000014986'), rChange: 1 },
           tranches: [
             {
               currentRatio: 0,
-              trancheDelta: { deltaA: ethers.BigNumber.from('149999999999999994'), deltaB: ethers.BigNumber.from('299999999999999988'), rChange: 1 },
+              trancheDelta: { deltaA: toBigNumber('149999999999999994'), deltaB: toBigNumber('299999999999999988'), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
               eTokenForTokenATokenB: 2,
-              tokenATokenBForEToken: { amountA: 0, amountB: ethers.BigNumber.from('1414213562373095048000000000000000000') },
-              tokenAForTokenB: ethers.BigNumber.from('582488963241223949'),
-              tokenBForTokenA: ethers.BigNumber.from('0'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') }
+              tokenATokenBForEToken: { amountA: 0, amountB: toBigNumber('1414213562373095048000000000000000000') },
+              tokenAForTokenB: toBigNumber('582488963241223949'),
+              tokenBForTokenA: toBigNumber('0'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('0'), amountB: toBigNumber('0') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('0'), amountB: toBigNumber('0') }
             },
             {
               currentRatio: 0,
-              trancheDelta: { deltaA: toUnit('2.5', 18), deltaB: toUnit('5', 18), rChange: 1 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('72831853071795864700000'),
-              tokenATokenBForEToken: { amountA: 0, amountB: ethers.BigNumber.from('141421356237300') },
-              tokenAForTokenB: ethers.BigNumber.from('500000000000000000'),
-              tokenBForTokenA: ethers.BigNumber.from('6283185307179586476'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('3141592653589793238') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('3141592653589793238') }
+              trancheDelta: { deltaA: toUnit('2.5', 18), deltaB: toUnit('5', 18), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
+              eTokenForTokenATokenB: toBigNumber('72831853071795864700000'),
+              tokenATokenBForEToken: { amountA: 0, amountB: toBigNumber('141421356237300') },
+              tokenAForTokenB: toBigNumber('500000000000000000'),
+              tokenBForTokenA: toBigNumber('6283185307179586476'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('3141592653589793238') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('3141592653589793238') }
             },
             {
               currentRatio: 0,
-              trancheDelta: { deltaA: ethers.BigNumber.from('350000000000000007499'), deltaB: ethers.BigNumber.from('700000000000000014998'), rChange: 1 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('153024941305856727'),
-              tokenATokenBForEToken: { amountA: 0, amountB: ethers.BigNumber.from('83189033080770296000') },
-              tokenAForTokenB: ethers.BigNumber.from('3171328799868886334'),
-              tokenBForTokenA: ethers.BigNumber.from('2692793703076965440'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('1884955592153875848') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('1884955592153875848') }
+              trancheDelta: { deltaA: toBigNumber('350000000000000007499'), deltaB: toBigNumber('700000000000000014998'), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
+              eTokenForTokenATokenB: toBigNumber('153024941305856727'),
+              tokenATokenBForEToken: { amountA: 0, amountB: toBigNumber('83189033080770296000') },
+              tokenAForTokenB: toBigNumber('3171328799868886334'),
+              tokenBForTokenA: toBigNumber('2692793703076965440'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('1884955592153875848') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('1884955592153875848') }
             }
           ]
         }
@@ -174,45 +174,45 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 8),
         sFactorB: toUnit('1', 22),
         tranches: [
-          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: 1, eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') }
+          { reserveA: 0, reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('10', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: 0, reserveB: toUnit('1000', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('2', 18),
         feeRate: toUnit('1', 18),
         targetRatio: toUnit('1', 18),
         results: {
-          delta: { deltaA: ethers.BigNumber.from('3526498'), deltaB: ethers.BigNumber.from('705299600000000000000'), rChange: 1, rDiv: 0 },
+          delta: { deltaA: toBigNumber('3526498'), deltaB: toBigNumber('705299600000000000000'), rChange: 1 },
           tranches: [
             {
               currentRatio: 0,
-              trancheDelta: { deltaA: ethers.BigNumber.from('1499'), deltaB: ethers.BigNumber.from('299800000000000000'), rChange: 1 },
+              trancheDelta: { deltaA: toBigNumber('1499'), deltaB: toBigNumber('299800000000000000'), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
               eTokenForTokenATokenB: 2,
-              tokenATokenBForEToken: { amountA: 0, amountB: ethers.BigNumber.from('1414213562373095048000000000000000000') },
-              tokenAForTokenB: ethers.BigNumber.from('5824'),
-              tokenBForTokenA: ethers.BigNumber.from('0'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') }
+              tokenATokenBForEToken: { amountA: 0, amountB: toBigNumber('1414213562373095048000000000000000000') },
+              tokenAForTokenB: toBigNumber('5824'),
+              tokenBForTokenA: toBigNumber('0'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('0'), amountB: toBigNumber('0') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('0'), amountB: toBigNumber('0') }
             },
             {
               currentRatio: 0,
-              trancheDelta: { deltaA: 25000, deltaB: ethers.BigNumber.from('5000000000000000000'), rChange: 1 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('6283185307179596476000000000000000000'),
-              tokenATokenBForEToken: { amountA: 0, amountB: ethers.BigNumber.from('141421356237300') },
-              tokenAForTokenB: ethers.BigNumber.from('5000'),
-              tokenBForTokenA: ethers.BigNumber.from('628318530717958647600000000000000'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('314159265358979323800000000000000') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('314159265358979323800000000000000') }
+              trancheDelta: { deltaA: 25000, deltaB: toBigNumber('5000000000000000000'), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
+              eTokenForTokenATokenB: toBigNumber('6283185307179596476000000000000000000'),
+              tokenATokenBForEToken: { amountA: 0, amountB: toBigNumber('141421356237300') },
+              tokenAForTokenB: toBigNumber('5000'),
+              tokenBForTokenA: toBigNumber('628318530717958647600000000000000'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('314159265358979323800000000000000') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('314159265358979323800000000000000') }
             },
             {
               currentRatio: 0,
-              trancheDelta: { deltaA: ethers.BigNumber.from('3499999'), deltaB: ethers.BigNumber.from('699999800000000000000'), rChange: 1 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('10681415022205343218600000000000'),
-              tokenATokenBForEToken: { amountA: 0, amountB: ethers.BigNumber.from('83189033080770296000') },
+              trancheDelta: { deltaA: toBigNumber('3499999'), deltaB: toBigNumber('699999800000000000000'), rChange: 1, rDiv: toBigNumber('1000000000000000000') },
+              eTokenForTokenATokenB: toBigNumber('10681415022205343218600000000000'),
+              tokenATokenBForEToken: { amountA: 0, amountB: toBigNumber('83189033080770296000') },
               tokenAForTokenB: 31713,
-              tokenBForTokenA: ethers.BigNumber.from('269279370307696544022902120870000'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('188495559215387584855222039230620') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('188495559215387584855222039230620') }
+              tokenBForTokenA: toBigNumber('269279370307696544022902120870000'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('188495559215387584855222039230620') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('188495559215387584855222039230620') }
             }
           ]
         }
@@ -224,44 +224,44 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 18),
         tranches: [
-          { reserveA: toUnit('1', 18), reserveB: 0, targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: 1, eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: toUnit('10', 18), reserveB: 0, targetRatio: toUnit(String(50/50), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: toUnit('1000', 18), reserveB: 0, targetRatio: toUnit(String(70/30), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') }
+          { reserveA: toUnit('1', 18), reserveB: 0, targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('10', 18), reserveB: 0, targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('1000', 18), reserveB: 0, targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: toUnit('2', 18),
         results: {
-          delta: { deltaA: ethers.BigNumber.from('305699999999999985010'), deltaB: ethers.BigNumber.from('305699999999999985010'), rChange: 0, rDiv: ethers.BigNumber.from('302373887240356068') },
+          delta: { deltaA: toBigNumber('305699999999999985010'), deltaB: toBigNumber('305699999999999985010'), rChange: 0 },
           tranches: [
             {
-              currentRatio: ethers.BigNumber.from('115792089237316195423570985008687907853269984665640564039457584007913129639935'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('700000000000000010'), deltaB: ethers.BigNumber.from('700000000000000010'), rChange: 0 },
+              currentRatio: ethers.constants.MaxUint256,
+              trancheDelta: { deltaA: toBigNumber('700000000000000010'), deltaB: toBigNumber('700000000000000010'), rChange: 0, rDiv: toBigNumber('115792089237316195423570985008687907853269984665640564039457584007913129639935') },
               eTokenForTokenATokenB: 2,
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('1414213562373095048000000000000000000'), amountB: 0 },
-              tokenAForTokenB: ethers.BigNumber.from('1164977926482447899'),
-              tokenBForTokenA: ethers.BigNumber.from('0'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') }
+              tokenATokenBForEToken: { amountA: toBigNumber('1414213562373095048000000000000000000'), amountB: 0 },
+              tokenAForTokenB: toBigNumber('1164977926482447899'),
+              tokenBForTokenA: toBigNumber('0'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('0'), amountB: toBigNumber('0') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('0'), amountB: toBigNumber('0') }
             },
             {
-              currentRatio: ethers.BigNumber.from('115792089237316195423570985008687907853269984665640564039457584007913129639935'),
-              trancheDelta: { deltaA: toUnit('5', 18), deltaB: toUnit('5', 18), rChange: 0 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('41415926535897932300000'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('141421356237300'), amountB: 0 },
-              tokenAForTokenB: ethers.BigNumber.from('1000000000000000000'),
-              tokenBForTokenA: ethers.BigNumber.from('3141592653589793238'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('1570796326794896619') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('1570796326794896619') }
+              currentRatio: ethers.constants.MaxUint256,
+              trancheDelta: { deltaA: toUnit('5', 18), deltaB: toUnit('5', 18), rChange: 0, rDiv: toBigNumber('115792089237316195423570985008687907853269984665640564039457584007913129639935') },
+              eTokenForTokenATokenB: toBigNumber('41415926535897932300000'),
+              tokenATokenBForEToken: { amountA: toBigNumber('141421356237300'), amountB: 0 },
+              tokenAForTokenB: toBigNumber('1000000000000000000'),
+              tokenBForTokenA: toBigNumber('3141592653589793238'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('1570796326794896619') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('1570796326794896619') }
             },
             {
-              currentRatio: ethers.BigNumber.from('115792089237316195423570985008687907853269984665640564039457584007913129639935'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('299999999999999985000'), deltaB: ethers.BigNumber.from('299999999999999985000'), rChange: 0 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('99617866194830246'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('83189033080770296000'), amountB: 0 },
-              tokenAForTokenB: ethers.BigNumber.from('6342657599737772668'),
-              tokenBForTokenA: ethers.BigNumber.from('1346396851538482720'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('942477796076937924') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('942477796076937924') }
+              currentRatio: ethers.constants.MaxUint256,
+              trancheDelta: { deltaA: toBigNumber('299999999999999985000'), deltaB: toBigNumber('299999999999999985000'), rChange: 0, rDiv: toBigNumber('115792089237316195423570985008687907853269984665640564039457584007913129639935') },
+              eTokenForTokenATokenB: toBigNumber('99617866194830246'),
+              tokenATokenBForEToken: { amountA: toBigNumber('83189033080770296000'), amountB: 0 },
+              tokenAForTokenB: toBigNumber('6342657599737772668'),
+              tokenBForTokenA: toBigNumber('1346396851538482720'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('942477796076937924') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('942477796076937924') }
             }
           ]
         }
@@ -273,93 +273,44 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 18),
         tranches: [
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: 1, eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(50/50), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(70/30), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') }
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: toUnit('100', 18),
         results: {
-          delta: { deltaA: 4, deltaB: 4, rChange: 1, rDiv: 2 },
+          delta: { deltaA: 4, deltaB: 4, rChange: 1 },
           tranches: [
             {
-              currentRatio: ethers.BigNumber.from('1000000000000000000'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('200000000000000010'), deltaB: ethers.BigNumber.from('200000000000000010'), rChange: 0 },
+              currentRatio: toBigNumber('1000000000000000000'),
+              trancheDelta: { deltaA: toBigNumber('200000000000000010'), deltaB: toBigNumber('200000000000000010'), rChange: 0, rDiv: toBigNumber('1333333333333333450') },
               eTokenForTokenATokenB: 2,
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('707106781186547524000000000000000000'), amountB: ethers.BigNumber.from('707106781186547524000000000000000000') },
-              tokenAForTokenB: ethers.BigNumber.from('1164977926482447899'),
-              tokenBForTokenA: ethers.BigNumber.from('0'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') }
+              tokenATokenBForEToken: { amountA: toBigNumber('707106781186547524000000000000000000'), amountB: toBigNumber('707106781186547524000000000000000000') },
+              tokenAForTokenB: toBigNumber('1164977926482447899'),
+              tokenBForTokenA: toBigNumber('0'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('0'), amountB: toBigNumber('0') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('0'), amountB: toBigNumber('0') }
             },
             {
-              currentRatio: ethers.BigNumber.from('1000000000000000000'),
-              trancheDelta: { deltaA: 0, deltaB: 0, rChange: 0 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('414159265358979323800000'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('7071067811865'), amountB: ethers.BigNumber.from('7071067811865') },
-              tokenAForTokenB: ethers.BigNumber.from('1000000000000000000'),
-              tokenBForTokenA: ethers.BigNumber.from('3141592653589793238'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('1570796326794896619') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('1570796326794896619') }
+              currentRatio: toBigNumber('1000000000000000000'),
+              trancheDelta: { deltaA: 0, deltaB: 0, rChange: 0, rDiv: 0 },
+              eTokenForTokenATokenB: toBigNumber('414159265358979323800000'),
+              tokenATokenBForEToken: { amountA: toBigNumber('7071067811865'), amountB: toBigNumber('7071067811865') },
+              tokenAForTokenB: toBigNumber('1000000000000000000'),
+              tokenBForTokenA: toBigNumber('3141592653589793238'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('1570796326794896619') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('1570796326794896619') }
             },
             {
-              currentRatio: ethers.BigNumber.from('1000000000000000000'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('200000000000000014'), deltaB: ethers.BigNumber.from('200000000000000014'), rChange: 1 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('99617866194830254041'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('41594516540385148'), amountB: ethers.BigNumber.from('41594516540385148') },
-              tokenAForTokenB: ethers.BigNumber.from('6342657599737772668'),
-              tokenBForTokenA: ethers.BigNumber.from('1346396851538482720'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('942477796076937924') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('942477796076937924') }
-            }
-          ]
-        }
-      },
-      // reserves are equal and non zero and rate is not 1
-      {
-        decA: 18,
-        decB: 18,
-        sFactorA: toUnit('1', 18),
-        sFactorB: toUnit('1', 18),
-        tranches: [
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: 1, eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(50/50), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(70/30), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') }
-        ],
-        rate: toUnit('2', 18),
-        feeRate: toUnit('1', 18),
-        results: {
-        delta: { deltaA: ethers.BigNumber.from('374999999999999997'), deltaB: ethers.BigNumber.from('749999999999999994'), rChange: 0, rDiv: ethers.BigNumber.from('249999999999999998') },
-          tranches: [
-            {
-              currentRatio: ethers.BigNumber.from('2000000000000000000'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('275000000000000008'), deltaB: ethers.BigNumber.from('550000000000000016'), rChange: 0 },
-              eTokenForTokenATokenB: 1,
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('707106781186547524000000000000000000'), amountB: ethers.BigNumber.from('707106781186547524000000000000000000') },
-              tokenAForTokenB: ethers.BigNumber.from('582488963241223949'),
-              tokenBForTokenA: ethers.BigNumber.from('0'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') }
-            },
-            {
-              currentRatio: ethers.BigNumber.from('2000000000000000000'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('125000000000000000'), deltaB: ethers.BigNumber.from('250000000000000000'), rChange: 0 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('485545687145305765000000'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('7071067811865'), amountB: ethers.BigNumber.from('7071067811865') },
-              tokenAForTokenB: ethers.BigNumber.from('500000000000000000'),
-              tokenBForTokenA: ethers.BigNumber.from('6283185307179586476'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('3141592653589793238') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('3141592653589793238') }
-            },
-            {
-              currentRatio: ethers.BigNumber.from('2000000000000000000'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('25000000000000011'), deltaB: ethers.BigNumber.from('50000000000000022'), rChange: 1 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('102016627537237826041'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('41594516540385148'), amountB: ethers.BigNumber.from('41594516540385148') },
-              tokenAForTokenB: ethers.BigNumber.from('3171328799868886334'),
-              tokenBForTokenA: ethers.BigNumber.from('2692793703076965440'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('1884955592153875848') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('1884955592153875848') }
+              currentRatio: toBigNumber('1000000000000000000'),
+              trancheDelta: { deltaA: toBigNumber('200000000000000014'), deltaB: toBigNumber('200000000000000014'), rChange: 1, rDiv: toBigNumber('571428571428571460') },
+              eTokenForTokenATokenB: toBigNumber('99617866194830254041'),
+              tokenATokenBForEToken: { amountA: toBigNumber('41594516540385148'), amountB: toBigNumber('41594516540385148') },
+              tokenAForTokenB: toBigNumber('6342657599737772668'),
+              tokenBForTokenA: toBigNumber('1346396851538482720'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('942477796076937924') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('942477796076937924') }
             }
           ]
         }
@@ -371,44 +322,44 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 8),
         sFactorB: toUnit('1', 22),
         tranches: [
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: 1, eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(50/50), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(70/30), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') }
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('0.5', 18), reserveB: toUnit('0.5', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('2', 18),
         feeRate: toUnit('0.01', 18),
         results: {
-          delta: { deltaA: ethers.BigNumber.from('750000002249996262'), deltaB: ethers.BigNumber.from('150000000449999252400000000000000'), rChange: 0, rDiv: ethers.BigNumber.from('500000001499997508') },
+          delta: { deltaA: toBigNumber('750000002249996262'), deltaB: toBigNumber('150000000449999252400000000000000'), rChange: 0 },
           tranches: [
             {
-              currentRatio: ethers.BigNumber.from('200000000000000000000000000000000'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('350000002099999262'), deltaB: ethers.BigNumber.from('70000000419999852400000000000000'), rChange: 0 },
+              currentRatio: toBigNumber('200000000000000000000000000000000'),
+              trancheDelta: { deltaA: toBigNumber('350000002099999262'), deltaB: toBigNumber('70000000419999852400000000000000'), rChange: 0, rDiv: toBigNumber('466666666666665690000000000000001') },
               eTokenForTokenATokenB: 0,
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('707106781186547524000000000000000000'), amountB: ethers.BigNumber.from('707106781186547524000000000000000000') },
-              tokenAForTokenB: ethers.BigNumber.from('5824'),
-              tokenBForTokenA: ethers.BigNumber.from('0'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') }
+              tokenATokenBForEToken: { amountA: toBigNumber('707106781186547524000000000000000000'), amountB: toBigNumber('707106781186547524000000000000000000') },
+              tokenAForTokenB: toBigNumber('5824'),
+              tokenBForTokenA: toBigNumber('0'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('0'), amountB: toBigNumber('0') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('0'), amountB: toBigNumber('0') }
             },
             {
-              currentRatio: ethers.BigNumber.from('200000000000000000000000000000000'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('249999999999998750'), deltaB: ethers.BigNumber.from('49999999999999750000000000000000'), rChange: 0 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('628318530717956506000000'),
-              tokenATokenBForEToken: { amountA: 7071067811865, amountB: ethers.BigNumber.from('7071067811865') },
-              tokenAForTokenB: ethers.BigNumber.from('5000'),
-              tokenBForTokenA: ethers.BigNumber.from('628318530717958647600000000000000'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('314159265358979323800000000000000') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('314159265358979323800000000000000') }
+              currentRatio: toBigNumber('200000000000000000000000000000000'),
+              trancheDelta: { deltaA: toBigNumber('249999999999998750'), deltaB: toBigNumber('49999999999999750000000000000000'), rChange: 0, rDiv: toBigNumber('199999999999999000000000000000000') },
+              eTokenForTokenATokenB: toBigNumber('628318530717956506000000'),
+              tokenATokenBForEToken: { amountA: 7071067811865, amountB: toBigNumber('7071067811865') },
+              tokenAForTokenB: toBigNumber('5000'),
+              tokenBForTokenA: toBigNumber('628318530717958647600000000000000'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('314159265358979323800000000000000') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('314159265358979323800000000000000') }
             },
             {
-              currentRatio: ethers.BigNumber.from('200000000000000000000000000000000'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('150000000149998250'), deltaB: ethers.BigNumber.from('30000000029999650000000000000000'), rChange: 0 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('106814150222052898114'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('41594516540385148'), amountB: ethers.BigNumber.from('41594516540385148') },
+              currentRatio: toBigNumber('200000000000000000000000000000000'),
+              trancheDelta: { deltaA: toBigNumber('150000000149998250'), deltaB: toBigNumber('30000000029999650000000000000000'), rChange: 0, rDiv: toBigNumber('85714285714284708163265306122449') },
+              eTokenForTokenATokenB: toBigNumber('106814150222052898114'),
+              tokenATokenBForEToken: { amountA: toBigNumber('41594516540385148'), amountB: toBigNumber('41594516540385148') },
               tokenAForTokenB: 31713,
-              tokenBForTokenA: ethers.BigNumber.from('269279370307696544022902120870000'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('188495559215387584855222039230620') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('188495559215387584855222039230620') }
+              tokenBForTokenA: toBigNumber('269279370307696544022902120870000'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('188495559215387584855222039230620') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('188495559215387584855222039230620') }
             }
           ]
         }
@@ -420,44 +371,44 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 8),
         tranches: [
-          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: 1, eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(50/50), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') },
-          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(70/30), 18), amountA: ethers.BigNumber.from('3141592653589793238'), amountB: ethers.BigNumber.from('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: ethers.BigNumber.from('1414213562373095048') }
+          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(30/70), 18), amountA: 0, amountB: toBigNumber('2718281828459045235'), eTokenSupply: 1, eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(50/50), 18), amountA: toBigNumber('3141592653589793238'), amountB: toUnit('1', 18), eTokenSupply: toUnit('100000', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 },
+          { reserveA: toUnit('1', 18), reserveB: toUnit('1', 18), targetRatio: toUnit(String(70/30), 18), amountA: toBigNumber('3141592653589793238'), amountB: toBigNumber('2718281828459045235'), eTokenSupply: toUnit('17', 18), eTokenAmount: toBigNumber('1414213562373095048'), rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: toUnit('1', 18),
         results: {
-          delta: { deltaA: ethers.BigNumber.from('14999999998500000045000000003'), deltaB: ethers.BigNumber.from('1499999999850000004'), rChange: 1, rDiv: ethers.BigNumber.from('4999999999500000015000000001') },
+          delta: { deltaA: toBigNumber('14999999998500000045000000003'), deltaB: toBigNumber('1499999999850000004'), rChange: 1 },
           tranches: [
             {
-              currentRatio: ethers.BigNumber.from('100000000'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('2999999999299999894999999989'), deltaB: ethers.BigNumber.from('299999999929999989'), rChange: 1 },
+              currentRatio: toBigNumber('100000000'),
+              trancheDelta: { deltaA: toBigNumber('2999999999299999894999999989'), deltaB: toBigNumber('299999999929999989'), rChange: 1, rDiv: toBigNumber('999999999766666667') },
               eTokenForTokenATokenB: 2,
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('1414213562373095048000000000000000000'), amountB: ethers.BigNumber.from('1414213562373095048000000000000000000') },
-              tokenAForTokenB: ethers.BigNumber.from('11649779264824478996082465330'),
-              tokenBForTokenA: ethers.BigNumber.from('0'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('0'), amountB: ethers.BigNumber.from('0') }
+              tokenATokenBForEToken: { amountA: toBigNumber('1414213562373095048000000000000000000'), amountB: toBigNumber('1414213562373095048000000000000000000') },
+              tokenAForTokenB: toBigNumber('11649779264824478996082465330'),
+              tokenBForTokenA: toBigNumber('0'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('0'), amountB: toBigNumber('0') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('0'), amountB: toBigNumber('0') }
             },
             {
-              currentRatio: ethers.BigNumber.from('100000000'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('4999999999500000000000000000'), deltaB: ethers.BigNumber.from('499999999950000000'), rChange: 1 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('100000000021415926500000'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('14142135623730'), amountB: ethers.BigNumber.from('14142135623730') },
-              tokenAForTokenB: ethers.BigNumber.from('10000000000000000000000000000'),
-              tokenBForTokenA: ethers.BigNumber.from('314159265'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('157079632') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('1570796326794896619'), amountB: ethers.BigNumber.from('157079632') }
+              currentRatio: toBigNumber('100000000'),
+              trancheDelta: { deltaA: toBigNumber('4999999999500000000000000000'), deltaB: toBigNumber('499999999950000000'), rChange: 1, rDiv: toBigNumber('999999999900000000') },
+              eTokenForTokenATokenB: toBigNumber('100000000021415926500000'),
+              tokenATokenBForEToken: { amountA: toBigNumber('14142135623730'), amountB: toBigNumber('14142135623730') },
+              tokenAForTokenB: toBigNumber('10000000000000000000000000000'),
+              tokenBForTokenA: toBigNumber('314159265'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('157079632') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('1570796326794896619'), amountB: toBigNumber('157079632') }
             },
             {
-              currentRatio: ethers.BigNumber.from('100000000'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('6999999999700000150000000014'), deltaB: ethers.BigNumber.from('699999999970000015'), rChange: 1 },
-              eTokenForTokenATokenB: ethers.BigNumber.from('46210791084523397389'),
-              tokenATokenBForEToken: { amountA: ethers.BigNumber.from('83189033080770296'), amountB: ethers.BigNumber.from('83189033080770296') },
-              tokenAForTokenB: ethers.BigNumber.from('63426575997377726680469714098'),
-              tokenBForTokenA: ethers.BigNumber.from('134639685'),
-              tokenATokenBForTokenA: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('94247779') },
-              tokenATokenBForTokenB: { amountA: ethers.BigNumber.from('2199114857512855314'), amountB: ethers.BigNumber.from('94247779') }
+              currentRatio: toBigNumber('100000000'),
+              trancheDelta: { deltaA: toBigNumber('6999999999700000150000000014'), deltaB: toBigNumber('699999999970000015'), rChange: 1, rDiv: toBigNumber('999999999957142858') },
+              eTokenForTokenATokenB: toBigNumber('46210791084523397389'),
+              tokenATokenBForEToken: { amountA: toBigNumber('83189033080770296'), amountB: toBigNumber('83189033080770296') },
+              tokenAForTokenB: toBigNumber('63426575997377726680469714098'),
+              tokenBForTokenA: toBigNumber('134639685'),
+              tokenATokenBForTokenA: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('94247779') },
+              tokenATokenBForTokenB: { amountA: toBigNumber('2199114857512855314'), amountB: toBigNumber('94247779') }
             }
           ]
         }
@@ -469,16 +420,16 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 6),
         tranches: [
-          { reserveA: ethers.BigNumber.from('100000000000000009'), reserveB: ethers.BigNumber.from('100000'), targetRatio: toUnit(String(50/50), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 }
+          { reserveA: toBigNumber('100000000000000009'), reserveB: toBigNumber('100000'), targetRatio: toUnit(String(50/50), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0, rebalancedAt: 0 }
         ],
         rate: toUnit('1', 18),
         feeRate: toUnit('1', 18),
         results: {
-          delta: { deltaA: ethers.BigNumber.from('0'), deltaB: ethers.BigNumber.from('0'), rChange: 0, rDiv: ethers.BigNumber.from('0') },
+          delta: { deltaA: toBigNumber('0'), deltaB: toBigNumber('0'), rChange: 0 },
           tranches: [
             {
-              currentRatio: ethers.BigNumber.from('1000000000000000090'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('0'), deltaB: ethers.BigNumber.from('0'), rChange: 0 },
+              currentRatio: toBigNumber('1000000000000000090'),
+              trancheDelta: { deltaA: toBigNumber('0'), deltaB: toBigNumber('0'), rChange: 0, rDiv: 0 },
               eTokenForTokenATokenB: 0,
               tokenATokenBForEToken: { amountA: 0, amountB: 0 },
               tokenAForTokenB: 0,
@@ -496,18 +447,18 @@ describe('EPoolLibrary', function () {
         sFactorA: toUnit('1', 18),
         sFactorB: toUnit('1', 6),
         tranches: [
-          { reserveA: ethers.BigNumber.from('3811729104010212'), reserveB: ethers.BigNumber.from('8067834'), targetRatio: toUnit(String(50/50), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 },
-          { reserveA: ethers.BigNumber.from('2082532324155799'), reserveB: ethers.BigNumber.from('13369999'), targetRatio: toUnit(String(25/75), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 },
-          { reserveA: ethers.BigNumber.from('11183284412251486'), reserveB: ethers.BigNumber.from('7893085'), targetRatio: toUnit(String(75/25), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0 }
+          { reserveA: toBigNumber('3811729104010212'), reserveB: toBigNumber('8067834'), targetRatio: toUnit(String(50/50), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0, rebalancedAt: 0 },
+          { reserveA: toBigNumber('2082532324155799'), reserveB: toBigNumber('13369999'), targetRatio: toUnit(String(25/75), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0, rebalancedAt: 0 },
+          { reserveA: toBigNumber('11183284412251486'), reserveB: toBigNumber('7893085'), targetRatio: toUnit(String(75/25), 18), amountA: 0, amountB: 0, eTokenSupply: 0, eTokenAmount: 0, rebalancedAt: 0 }
         ],
-        rate: ethers.BigNumber.from('2122977615747369595606'),
-        feeRate: ethers.BigNumber.from('5000000000000000'),
+        rate: toBigNumber('2122977615747369595606'),
+        feeRate: toBigNumber('5000000000000000'),
         results: {
-          delta: { deltaA: ethers.BigNumber.from('0'), deltaB: ethers.BigNumber.from('0'), rChange: 0, rDiv: ethers.BigNumber.from('0') },
+          delta: { deltaA: toBigNumber('0'), deltaB: toBigNumber('0'), rChange: 0 },
           tranches: [
             {
-              currentRatio: ethers.BigNumber.from('1003022070744943096'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('5742303857941'), deltaB: ethers.BigNumber.from('10614'), rChange: 0 },
+              currentRatio: toBigNumber('1003022070744943096'),
+              trancheDelta: { deltaA: toBigNumber('5742303857941'), deltaB: toBigNumber('10614'), rChange: 0, rDiv: toBigNumber('3022070744943096') },
               eTokenForTokenATokenB: 0,
               tokenATokenBForEToken: { amountA: 0, amountB: 0 },
               tokenAForTokenB: 0,
@@ -516,8 +467,8 @@ describe('EPoolLibrary', function () {
               tokenATokenBForTokenB: { amountA: 0, amountB: 0 }
             },
             {
-              currentRatio: ethers.BigNumber.from('330678372395772534'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('12540225866110'), deltaB: ethers.BigNumber.from('25475'), rChange: 1 },
+              currentRatio: toBigNumber('330678372395772534'),
+              trancheDelta: { deltaA: toBigNumber('12540225866110'), deltaB: toBigNumber('25475'), rChange: 1, rDiv: toBigNumber('7964882812682299') },
               eTokenForTokenATokenB: 0,
               tokenATokenBForEToken: { amountA: 0, amountB: 0 },
               tokenAForTokenB: 0,
@@ -526,8 +477,8 @@ describe('EPoolLibrary', function () {
               tokenATokenBForTokenB: { amountA: 0, amountB: 0 }
             },
             {
-              currentRatio: ethers.BigNumber.from('3007931940140817345'),
-              trancheDelta: { deltaA: ethers.BigNumber.from('7372602198203'), deltaB: ethers.BigNumber.from('14860'), rChange: 0 },
+              currentRatio: toBigNumber('3007931940140817345'),
+              trancheDelta: { deltaA: toBigNumber('7372602198203'), deltaB: toBigNumber('14860'), rChange: 0, rDiv: toBigNumber('2643980046939115') },
               eTokenForTokenATokenB: 0,
               tokenATokenBForEToken: { amountA: 0, amountB: 0 },
               tokenAForTokenB: 0,
@@ -548,11 +499,14 @@ describe('EPoolLibrary', function () {
         reserveB: EthersBigNumber,
         rate: EthersBigNumber,
         targetRatio: EthersBigNumber,
+        rebalancedAt: EthersBigNumber,
         sFactorA?: EthersBigNumber,
         sFactorB?:EthersBigNumber
       ): Promise<EthersBigNumber> {
         return await this.epl.connect(this.signers.admin).currentRatio(
-          { eToken: ethers.constants.AddressZero, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio },
+          {
+            eToken: ethers.constants.AddressZero, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio, rebalancedAt
+          },
           rate,
           sFactorA || this.sFactorA,
           sFactorB || this.sFactorB
@@ -567,7 +521,9 @@ describe('EPoolLibrary', function () {
         for (let i = 0; i < s.tranches.length; i++) {
           const t = s.tranches[i];
           const result = s.results.tranches[i].currentRatio;
-          const ratio = await this.currentRatio(t.reserveA, t.reserveB, s.rate, t.targetRatio, s.sFactorA, s.sFactorB);
+          const ratio = await this.currentRatio(
+            t.reserveA, t.reserveB, s.rate, t.targetRatio, t.rebalancedAt, s.sFactorA, s.sFactorB
+          );
           assert(ratio.eq(result), `expected ratio: ${result.toString()}, actual ratio: ${ratio.toString()}`);
         }
       }
@@ -581,11 +537,14 @@ describe('EPoolLibrary', function () {
         reserveB: EthersBigNumber,
         rate: EthersBigNumber,
         targetRatio: EthersBigNumber,
+        rebalancedAt: EthersBigNumber,
         sFactorA?: EthersBigNumber,
         sFactorB?:EthersBigNumber
-      ): Promise<{ deltaA: EthersBigNumber; deltaB: EthersBigNumber; rChange: EthersBigNumber; }> {
+      ): Promise<{ deltaA: EthersBigNumber; deltaB: EthersBigNumber; rChange: EthersBigNumber; rDiv: EthersBigNumber }> {
         return await this.epl.connect(this.signers.admin).trancheDelta(
-          { eToken: ethers.constants.AddressZero, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio },
+          {
+            eToken: ethers.constants.AddressZero, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio, rebalancedAt
+          },
           rate,
           sFactorA || this.sFactorA,
           sFactorB || this.sFactorB
@@ -600,13 +559,19 @@ describe('EPoolLibrary', function () {
         for (let i = 0; i < s.tranches.length; i++) {
           const t = s.tranches[i];
           const result = s.results.tranches[i].trancheDelta;
-          const delta = await this.trancheDelta(t.reserveA, t.reserveB, s.rate, t.targetRatio, s.sFactorA, s.sFactorB);
+          const delta = await this.trancheDelta(
+            t.reserveA, t.reserveB, s.rate, t.targetRatio, t.rebalancedAt, s.sFactorA, s.sFactorB
+          );
           assert(
-            delta.deltaA.eq(result.deltaA) && delta.deltaB.eq(result.deltaB) && delta.rChange.eq(result.rChange),
+            delta.deltaA.eq(result.deltaA)
+            && delta.deltaB.eq(result.deltaB)
+            && delta.rChange.eq(result.rChange)
+            && delta.rDiv.eq(result.rDiv),
             `
             expected deltaA: ${result.deltaA.toString()}, actual deltaA: ${delta.deltaA.toString()}
             expected deltaB: ${result.deltaB.toString()}, actual deltaB: ${delta.deltaB.toString()}
             expected rChange: ${result.rChange.toString()}, actual rChange: ${delta.rChange.toString()}
+            expected rDiv: ${result.rDiv.toString()}, actual rDiv: ${delta.rDiv.toString()}
             `
           );
         }
@@ -617,11 +582,13 @@ describe('EPoolLibrary', function () {
   describe('#delta', function () {
     before(async function () {
       this.delta = async function (
-        tranches: { reserveA: EthersBigNumber; reserveB: EthersBigNumber; targetRatio: EthersBigNumber }[],
+        tranches: {
+          reserveA: EthersBigNumber; reserveB: EthersBigNumber; targetRatio: EthersBigNumber, rebalancedAt: EthersBigNumber
+        }[],
         rate: EthersBigNumber,
         sFactorA?: EthersBigNumber,
         sFactorB?:EthersBigNumber
-      ): Promise<{ deltaA: EthersBigNumber; deltaB: EthersBigNumber; rChange: EthersBigNumber; }> {
+      ): Promise<{ deltaA: EthersBigNumber; deltaB: EthersBigNumber; rChange: EthersBigNumber }> {
         return await this.epl.connect(this.signers.admin).delta(
           tranches.map((t) => ({ ...t, eToken: ethers.constants.AddressZero, sFactorE: this.sFactorE })),
           rate,
@@ -638,15 +605,11 @@ describe('EPoolLibrary', function () {
         const result = s.results.delta;
         const delta = await this.delta(s.tranches, s.rate, s.sFactorA, s.sFactorB);
         assert(
-          delta.deltaA.eq(result.deltaA)
-          && delta.deltaB.eq(result.deltaB)
-          && delta.rChange.eq(result.rChange)
-          && delta.rDiv.eq(result.rDiv),
+          delta.deltaA.eq(result.deltaA) && delta.deltaB.eq(result.deltaB) && delta.rChange.eq(result.rChange),
           `
           expected deltaA: ${result.deltaA.toString()}, actual deltaA: ${delta.deltaA.toString()}
           expected deltaB: ${result.deltaB.toString()}, actual deltaB: ${delta.deltaB.toString()}
           expected rChange: ${result.rChange.toString()}, actual rChange: ${delta.rChange.toString()}
-          expected rDiv: ${result.rDiv.toString()}, actual rDiv: ${delta.rDiv.toString()}
           `
         );
       }
@@ -661,13 +624,14 @@ describe('EPoolLibrary', function () {
         reserveB: EthersBigNumber,
         rate: EthersBigNumber,
         targetRatio: EthersBigNumber,
+        rebalancedAt: EthersBigNumber,
         amountA: EthersBigNumber,
         amountB: EthersBigNumber,
         sFactorA?: EthersBigNumber,
         sFactorB?:EthersBigNumber
       ): Promise<EthersBigNumber> {
         return await this.epl.connect(this.signers.admin).eTokenForTokenATokenB(
-          { eToken, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio },
+          { eToken, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio, rebalancedAt },
           amountA,
           amountB,
           rate,
@@ -689,7 +653,16 @@ describe('EPoolLibrary', function () {
           await this.eToken.connect(this.signers.admin).mint(this.accounts.admin, t.eTokenSupply);
           const result = s.results.tranches[i].eTokenForTokenATokenB;
           const amount = await this.eTokenForTokenATokenB(
-            this.eToken.address, t.reserveA, t.reserveB, s.rate, t.targetRatio, t.amountA, t.amountB, s.sFactorA, s.sFactorB
+            this.eToken.address,
+            t.reserveA,
+            t.reserveB,
+            s.rate,
+            t.targetRatio,
+            t.rebalancedAt,
+            t.amountA,
+            t.amountB,
+            s.sFactorA,
+            s.sFactorB
           );
           assert(amount.eq(result), `expected amount: ${result.toString()}, actual amount: ${amount.toString()}`);
         }
@@ -705,12 +678,13 @@ describe('EPoolLibrary', function () {
         reserveB: EthersBigNumber,
         rate: EthersBigNumber,
         targetRatio: EthersBigNumber,
+        rebalancedAt: EthersBigNumber,
         amount: EthersBigNumber,
         sFactorA?: EthersBigNumber,
         sFactorB?:EthersBigNumber
       ): Promise<{ amountA: EthersBigNumber; amountB: EthersBigNumber; }> {
         return await this.epl.connect(this.signers.admin).tokenATokenBForEToken(
-          { eToken, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio },
+          { eToken, sFactorE: this.sFactorE, reserveA, reserveB, targetRatio, rebalancedAt },
           amount,
           rate,
           sFactorA || this.sFactorA,
@@ -731,7 +705,7 @@ describe('EPoolLibrary', function () {
           await this.eToken.connect(this.signers.admin).mint(this.accounts.admin, t.eTokenSupply);
           const result = s.results.tranches[i].tokenATokenBForEToken;
           const amounts = await this.tokenATokenBForEToken(
-            this.eToken.address, t.reserveA, t.reserveB, s.rate, t.targetRatio, t.eTokenAmount, s.sFactorA, s.sFactorB
+            this.eToken.address, t.reserveA, t.reserveB, s.rate, t.targetRatio, t.rebalancedAt, t.eTokenAmount, s.sFactorA, s.sFactorB
           );
           assert(
             this.roundEqual(amounts.amountA, result.amountA) && this.roundEqual(amounts.amountB, result.amountB),

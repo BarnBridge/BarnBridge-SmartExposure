@@ -17,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        test: ['yarn test', 'yarn test:forking']
+        test: ['yarn test', 'yarn test:mainnet']
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -25,16 +25,15 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '10.x'
-          
+
       - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Setup repository
         run: |
-          cp sample.env .env
-          echo "PROVIDER_FORKING=${{ secrets.PROVIDER_FORKING }}" >> .env
+          cp ci.env .env
+          echo "PROVIDER_FORKING=${{ secrets.PROVIDER_FORKING_MAINNET }}" >> .env
           yarn install --update-checksums
           yarn compile
       - name: Run tests
         run: ${{ matrix.test }}
-      

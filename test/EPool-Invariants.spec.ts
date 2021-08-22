@@ -34,14 +34,16 @@ describe('EPool-Invariants', function () {
         return reserveA.add(reserveB.mul(this.sFactorI).div(rate).mul(this.sFactorA).div(this.sFactorB));
       };
 
-      await this.tokenA.connect(this.signers.admin).mint(this.accounts.user, this.sFactorA.mul('1000000000000000000000'));
-      await this.tokenB.connect(this.signers.admin).mint(this.accounts.user, this.sFactorB.mul('1000000000000000000000'));
-      await this.tokenA.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorA.mul(1));
-      await this.tokenB.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorB.mul(5000));
-      await this.tokenA.connect(this.signers.user).approve(this.ep.address, this.sFactorA.mul('1000000000000000000000'));
-      await this.tokenB.connect(this.signers.user).approve(this.ep.address, this.sFactorB.mul('1000000000000000000000'));
-      await this.tokenA.connect(this.signers.user2).approve(this.ep.address, this.sFactorA.mul(1));
-      await this.tokenB.connect(this.signers.user2).approve(this.ep.address, this.sFactorB.mul(5000));
+      await Promise.all([
+        this.tokenA.connect(this.signers.admin).mint(this.accounts.user, this.sFactorA.mul('1000000000000000000000')),
+        this.tokenB.connect(this.signers.admin).mint(this.accounts.user, this.sFactorB.mul('1000000000000000000000')),
+        this.tokenA.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorA.mul(1)),
+        this.tokenB.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorB.mul(5000)),
+        this.tokenA.connect(this.signers.user).approve(this.ep.address, this.sFactorA.mul('1000000000000000000000')),
+        this.tokenB.connect(this.signers.user).approve(this.ep.address, this.sFactorB.mul('1000000000000000000000')),
+        this.tokenA.connect(this.signers.user2).approve(this.ep.address, this.sFactorA.mul(1)),
+        this.tokenB.connect(this.signers.user2).approve(this.ep.address, this.sFactorB.mul(5000))
+      ]);
     });
 
     xit('should never withdraw more than deposited for constant value', async function () {
@@ -60,12 +62,12 @@ describe('EPool-Invariants', function () {
       for (let i = 0; i < steps; i++) {
         const price = startPrice + (1.01 ** stepSize) * i;
         await this.aggregator.connect(this.signers.admin).setAnswer(parseUnits(String(price), this.decI));
-        await this.ep.connect(this.signers.user).rebalance(this.sFactorI);
+        await this.ep.connect(this.signers.user).rebalance();
       }
       for (let i = 0; i < steps; i++) {
         const price = topPrice - (1.01 ** stepSize) * i;
         await this.aggregator.connect(this.signers.admin).setAnswer(parseUnits(String(price), this.decI));
-        await this.ep.connect(this.signers.user).rebalance(this.sFactorI);
+        await this.ep.connect(this.signers.user).rebalance();
       }
 
       const balanceOf = await this.eToken.connect(this.signers.user).balanceOf(await this.signers.user.getAddress());
@@ -89,12 +91,12 @@ describe('EPool-Invariants', function () {
       for (let i = 0; i < 20; i++) {
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(priceB));
         const preTotalA_ = await this.totalA();
-        await this.ep.connect(this.signers.user).rebalance(this.sFactorI);
+        await this.ep.connect(this.signers.user).rebalance();
         const postTotalA_ = await this.totalA();
         assert(this.roundEqual(postTotalA_, preTotalA_));
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(priceA));
         const preTotalA__ = await this.totalA();
-        await this.ep.connect(this.signers.user).rebalance(this.sFactorI);
+        await this.ep.connect(this.signers.user).rebalance();
         const postTotalA__ = await this.totalA();
         assert(this.roundEqual(postTotalA__, preTotalA__));
       }

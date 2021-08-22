@@ -8,7 +8,7 @@ import { environmentFixture, signersFixture } from './fixture';
 
 const { utils: { parseUnits: toUnit } } = ethers;
 
-describe('EPoolPeriphery - Scenarios', function () {
+describe('EPoolPeripheryV3 - Scenarios', function () {
 
   before(async function () {
     await signersFixture.bind(this)();
@@ -162,20 +162,20 @@ describe('EPoolPeriphery - Scenarios', function () {
 
             this.tokenA.connect(this.signers.admin).mint(this.accounts.user, this.sFactorA.mul(100000)),
             this.tokenB.connect(this.signers.admin).mint(this.accounts.user, this.sFactorB.mul(100000)),
-            this.tokenA.connect(this.signers.user).approve(this.epp.address, this.sFactorA.mul(100000)),
-            this.tokenB.connect(this.signers.user).approve(this.epp.address, this.sFactorB.mul(100000)),
+            this.tokenA.connect(this.signers.user).approve(this.eppV3.address, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.user).approve(this.eppV3.address, this.sFactorB.mul(100000)),
 
             this.tokenA.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorA.mul(100000)),
             this.tokenB.connect(this.signers.admin).mint(this.accounts.user2, this.sFactorB.mul(100000)),
-            this.tokenA.connect(this.signers.user2).approve(this.epp.address, this.sFactorA.mul(100000)),
-            this.tokenB.connect(this.signers.user2).approve(this.epp.address, this.sFactorB.mul(100000)),
+            this.tokenA.connect(this.signers.user2).approve(this.eppV3.address, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.user2).approve(this.eppV3.address, this.sFactorB.mul(100000)),
 
-            this.tokenA.connect(this.signers.admin).mint(this.router.address, this.sFactorA.mul(100000)),
-            this.tokenB.connect(this.signers.admin).mint(this.router.address, this.sFactorB.mul(100000)),
+            this.tokenA.connect(this.signers.admin).mint(this.routerV3.address, this.sFactorA.mul(100000)),
+            this.tokenB.connect(this.signers.admin).mint(this.routerV3.address, this.sFactorB.mul(100000)),
 
             // initial exchange rate
             this.aggregator.connect(this.signers.admin).setAnswer(scenario.initialRate),
-            this.router.connect(this.signers.admin).setRate(scenario.initialRate),
+            this.routerV3.connect(this.signers.admin).setRate(scenario.initialRate),
             // set controller
             this.controller.connect(this.signers.admin).setFeesOwner(this.accounts.feesOwner)
           ]);
@@ -187,8 +187,8 @@ describe('EPoolPeriphery - Scenarios', function () {
 
         describe('#setEPoolApproval', function () {
           it('should approve all tranches', async function () {
-            await this.epp.connect(this.signers.admin).setEPoolApproval(this.ep.address, true);
-            expect(await this.epp.connect(this.signers.admin).ePools(this.ep.address)).to.equal(true);
+            await this.eppV3.connect(this.signers.admin).setEPoolApproval(this.ep.address, true);
+            expect(await this.eppV3.connect(this.signers.admin).ePools(this.ep.address)).to.equal(true);
           });
         });
 
@@ -204,14 +204,14 @@ describe('EPoolPeriphery - Scenarios', function () {
                   const _totalA = amountA.add(amountB.mul(this.sFactorI).div(rate).mul(this.sFactorA).div(this.sFactorB));
                   const totalA = await this.eph.connect(action.signer).totalA(this.ep.address, amountA, amountB);
                   assert(_totalA.eq(totalA));
-                  const eTokenAmount = await this.epp.connect(this.signers.user).eTokenForMinInputAmountA_Unsafe(this.ep.address, tranche.eToken, totalA);
+                  const eTokenAmount = await this.eppV3.connect(this.signers.user).eTokenForMinInputAmountA_Unsafe(this.ep.address, tranche.eToken, totalA);
                   assert(this.roundEqual(eTokenAmount, action.eTokenAmount));
                   const balanceOf = await eToken.connect(action.signer).balanceOf(await action.signer.getAddress());
                   const deadline = (await ethers.provider.getBlock('latest')).timestamp + 600;
-                  const receipt = await (await this.epp.connect(action.signer).issueForMaxTokenA(
+                  const receipt = await (await this.eppV3.connect(action.signer).issueForMaxTokenA(
                     this.ep.address, eToken.address, action.eTokenAmount, totalA, deadline
                   )).wait();
-                  const IssuanceEvent = new ethers.utils.Interface([this.epp.interface.getEvent('IssuedEToken')]);
+                  const IssuanceEvent = new ethers.utils.Interface([this.eppV3.interface.getEvent('IssuedEToken')]);
                   const event = receipt.events?.find((event: any) => {
                     try { IssuanceEvent.parseLog(event); return true; } catch(error) { return false; }
                   });
@@ -235,14 +235,14 @@ describe('EPoolPeriphery - Scenarios', function () {
                   const _totalB = amountB.add(amountA.mul(rate).div(this.sFactorI).mul(this.sFactorB).div(this.sFactorA));
                   const totalB = await this.eph.connect(action.signer).totalB(this.ep.address, amountA, amountB);
                   assert(_totalB.eq(totalB));
-                  const eTokenAmount = await this.epp.connect(this.signers.user).eTokenForMinInputAmountB_Unsafe(this.ep.address, tranche.eToken, totalB);
+                  const eTokenAmount = await this.eppV3.connect(this.signers.user).eTokenForMinInputAmountB_Unsafe(this.ep.address, tranche.eToken, totalB);
                   assert(this.roundEqual(eTokenAmount, action.eTokenAmount));
                   const balanceOf = await eToken.connect(action.signer).balanceOf(await action.signer.getAddress());
                   const deadline = (await ethers.provider.getBlock('latest')).timestamp + 600;
-                  const receipt = await (await this.epp.connect(action.signer).issueForMaxTokenB(
+                  const receipt = await (await this.eppV3.connect(action.signer).issueForMaxTokenB(
                     this.ep.address, eToken.address, action.eTokenAmount, totalB, deadline
                   )).wait();
-                  const IssuanceEvent = new ethers.utils.Interface([this.epp.interface.getEvent('IssuedEToken')]);
+                  const IssuanceEvent = new ethers.utils.Interface([this.eppV3.interface.getEvent('IssuedEToken')]);
                   const event = receipt.events?.find((event: any) => {
                     try { IssuanceEvent.parseLog(event); return true; } catch(error) { return false; }
                   });
@@ -282,12 +282,12 @@ describe('EPoolPeriphery - Scenarios', function () {
                   const rate = (await this.ep.connect(action.signer).getRate());
                   const totalA = amountA.add(amountB.mul(this.sFactorI).div(rate).mul(this.sFactorA).div(this.sFactorB));
                   const balanceOf = await eToken.connect(action.signer).balanceOf(await action.signer.getAddress());
-                  await eToken.connect(action.signer).approve(this.epp.address, action.eTokenAmount );
+                  await eToken.connect(action.signer).approve(this.eppV3.address, action.eTokenAmount );
                   const deadline = (await ethers.provider.getBlock('latest')).timestamp + 600;
-                  const receipt = await (await this.epp.connect(action.signer).redeemForMinTokenA(
+                  const receipt = await (await this.eppV3.connect(action.signer).redeemForMinTokenA(
                     this.ep.address, eToken.address, action.eTokenAmount, totalA, deadline
                   )).wait();
-                  const RedemptionEvent = new ethers.utils.Interface([this.epp.interface.getEvent('RedeemedEToken')]);
+                  const RedemptionEvent = new ethers.utils.Interface([this.eppV3.interface.getEvent('RedeemedEToken')]);
                   const event = receipt.events?.find((event: any) => {
                     try { RedemptionEvent.parseLog(event); return true; } catch(error) { return false; }
                   });
@@ -312,12 +312,12 @@ describe('EPoolPeriphery - Scenarios', function () {
                   const rate = (await this.ep.connect(action.signer).getRate());
                   const totalB = amountB.add(amountA.mul(rate).div(this.sFactorI).mul(this.sFactorB).div(this.sFactorA));
                   const balanceOf = await eToken.connect(action.signer).balanceOf(await action.signer.getAddress());
-                  await eToken.connect(action.signer).approve(this.epp.address, action.eTokenAmount );
+                  await eToken.connect(action.signer).approve(this.eppV3.address, action.eTokenAmount );
                   const deadline = (await ethers.provider.getBlock('latest')).timestamp + 600;
-                  const receipt = await (await this.epp.connect(action.signer).redeemForMinTokenB(
+                  const receipt = await (await this.eppV3.connect(action.signer).redeemForMinTokenB(
                     this.ep.address, eToken.address, action.eTokenAmount, totalB, deadline
                   )).wait();
-                  const RedemptionEvent = new ethers.utils.Interface([this.epp.interface.getEvent('RedeemedEToken')]);
+                  const RedemptionEvent = new ethers.utils.Interface([this.eppV3.interface.getEvent('RedeemedEToken')]);
                   const event = receipt.events?.find((event: any) => {
                     try { RedemptionEvent.parseLog(event); return true; } catch(error) { return false; }
                   });
@@ -338,7 +338,7 @@ describe('EPoolPeriphery - Scenarios', function () {
                   break;
                 }
                 case 'setRate': {
-                  await this.router.connect(this.signers.admin).setRate(action.rate);
+                  await this.routerV3.connect(this.signers.admin).setRate(action.rate);
                   break;
                 }
               }

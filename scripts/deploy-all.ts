@@ -5,12 +5,13 @@ import { resolve } from 'path';
 dotenvConfig({ path: resolve(__dirname, './.env') });
 
 import { NETWORK_ENV } from '../network';
-import { deployContract, verifyContract } from './helper';
+import { callMethod, deployContract, verifyContract } from './helper';
 
 const { ethers } = hre;
 
 async function main(): Promise<void> {
   const {
+    WETH, DAI, AggregatorV3Proxy_DAI_WETH,
     UniswapV2Factory, UniswapV2Router02,
     UniswapV3Factory, UniswapV3Router, UniswapV3Quoter
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -37,9 +38,11 @@ async function main(): Promise<void> {
 
   // ETokenFactory
   deployed.push({...await deployContract('ETokenFactory', [controller.address], opts)});
+  const eTokenFactory = deployed[deployed.length - 1].contract;
 
   // EPoolHelper
   deployed.push({...await deployContract('EPoolHelper', [], opts)});
+  // const ePoolHelper = deployed[deployed.length - 1].contract;
 
   // EPoolPeriphery
   deployed.push({...await deployContract(
@@ -47,6 +50,7 @@ async function main(): Promise<void> {
     [controller.address, UniswapV2Factory, UniswapV2Router02],
     opts
   )});
+  const ePoolPeriphery = deployed[deployed.length - 1].contract;
 
   // EPoolPeripheryV3
   deployed.push({...await deployContract(
@@ -54,6 +58,43 @@ async function main(): Promise<void> {
     [controller.address, UniswapV3Factory, UniswapV3Router, UniswapV3Quoter],
     opts
   )});
+  const ePoolPeripheryV3 = deployed[deployed.length - 1].contract;
+
+  // EPool - WETH / DAI
+  deployed.push({...await deployContract(
+    'EPool', [controller.address, eTokenFactory.address, WETH, DAI, AggregatorV3Proxy_DAI_WETH, true], opts
+  )});
+  const ePool = deployed[deployed.length - 1].contract;
+
+  /* --------------------------------------------------------------------------------------------------------------- */
+  /* Set params                                                                                                      */
+  /* --------------------------------------------------------------------------------------------------------------- */
+
+  // Approve EPool on EPoolPeriphery
+  await callMethod(
+    deployer, 'EPoolPeriphery', ePoolPeriphery.address, 'setEPoolApproval', [ePool.address, true], opts
+  );
+
+  // Approve EPool on EPoolPeripheryV3
+  await callMethod(
+    deployer, 'EPoolPeripheryV3', ePoolPeripheryV3.address, 'setEPoolApproval', [ePool.address, true], opts
+  );
+
+  // Set fee rate on EPool
+  await callMethod(
+    deployer, 'EPool', ePool.address, 'setFeeRate', [ethers.utils.parseUnits('0.01', '18')], opts
+  );
+
+  // Create tranche on EPool
+  await callMethod(
+    deployer,
+    'EPool',
+    ePool.address,
+    'addTranche',
+    ['428571428571428540', 'Barnbridge Exposure Token Wrapped-Ether 30% / DAI 70%', 'bb_ET_WETH30/DAI70'],
+    opts
+  );
+  console.log(`  EToken (30/70):   ${(await ePool.connect(deployer).getTranches())[0].eToken }\n`);
 
   /* --------------------------------------------------------------------------------------------------------------- */
   /* Verify contracts on Etherscan                                                                                   */

@@ -36,55 +36,60 @@ library EPoolLibrary {
 
     /**
      * @notice Returns the deviation of reserveA and reserveB from target ratio
-     * currentRatio > targetRatio: release TokenA liquidity and add TokenB liquidity
-     * currentRatio < targetRatio: add TokenA liquidity and release TokenB liquidity
+     * currentRatio >= targetRatio: release TokenA liquidity and add TokenB liquidity --> rChange = 0
+     * currentRatio < targetRatio: add TokenA liquidity and release TokenB liquidity --> rChange = 1
      * deltaA := abs(t.reserveA, (t.reserveB / rate * t.targetRatio)) / (1 + t.targetRatio)
      * deltaB := deltaA * rate
+     * rChange := 0 if currentRatio >= targetRatio, 1 if currentRatio < targetRatio
+     * rDiv := 1 - (currentRatio / targetRatio)
      */
     function trancheDelta(
         IEPool.Tranche memory t,
         uint256 rate,
         uint256 sFactorA,
         uint256 sFactorB
-    ) internal pure returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
-        rChange = (currentRatio(t, rate, sFactorA, sFactorB) < t.targetRatio) ? 1 : 0;
+    ) internal pure returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
+        uint256 ratio = currentRatio(t, rate, sFactorA, sFactorB);
+        if (ratio < t.targetRatio) {
+            (rChange, rDiv) = (1, sFactorI - (ratio * sFactorI / t.targetRatio));
+        } else {
+            (rChange, rDiv) = (
+                0, (ratio == type(uint256).max) ? type(uint256).max : (ratio * sFactorI / t.targetRatio) - sFactorI
+            );
+        }
         deltaA = (
             Math.abs(t.reserveA, tokenAForTokenB(t.reserveB, t.targetRatio, rate, sFactorA, sFactorB)) * sFactorA
         ) / (sFactorA + (t.targetRatio * sFactorA / sFactorI));
         // (convert to TokenB precision first to avoid altering deltaA)
         deltaB = ((deltaA * sFactorB / sFactorA) * rate) / sFactorI;
         // round to 0 in case of rounding errors
-        if (deltaA == 0 || deltaB == 0) (deltaA, deltaB, rChange) = (0, 0, 0);
+        if (deltaA == 0 || deltaB == 0) (deltaA, deltaB, rChange, rDiv) = (0, 0, 0, 0);
     }
 
     /**
-     * @notice Returns the sum of the tranches reserve deltas
+     * @notice Returns the sum of the tranches total deltas (summed up tranche deltaA and deltaB)
      */
     function delta(
         IEPool.Tranche[] memory ts,
         uint256 rate,
         uint256 sFactorA,
         uint256 sFactorB
-    ) internal pure returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
-        uint256 totalReserveA;
+    ) internal pure returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
         int256 totalDeltaA;
         int256 totalDeltaB;
         for (uint256 i = 0; i < ts.length; i++) {
-            totalReserveA += ts[i].reserveA;
-            (uint256 _deltaA, uint256 _deltaB, uint256 _rChange) = trancheDelta(
-                ts[i], rate, sFactorA, sFactorB
-            );
-            (totalDeltaA, totalDeltaB) = (_rChange == 0)
-                ? (totalDeltaA - int256(_deltaA), totalDeltaB + int256(_deltaB))
-                : (totalDeltaA + int256(_deltaA), totalDeltaB - int256(_deltaB));
-
+            (uint256 _deltaA, uint256 _deltaB, uint256 _rChange,) = trancheDelta(ts[i], rate, sFactorA, sFactorB);
+            if (_rChange == 0) {
+                (totalDeltaA, totalDeltaB) = (totalDeltaA - int256(_deltaA), totalDeltaB + int256(_deltaB));
+            } else {
+                (totalDeltaA, totalDeltaB) = (totalDeltaA + int256(_deltaA), totalDeltaB - int256(_deltaB));
+            }
         }
         if (totalDeltaA > 0 && totalDeltaB < 0)  {
             (deltaA, deltaB, rChange) = (uint256(totalDeltaA), uint256(-totalDeltaB), 1);
         } else if (totalDeltaA < 0 && totalDeltaB > 0) {
             (deltaA, deltaB, rChange) = (uint256(-totalDeltaA), uint256(totalDeltaB), 0);
         }
-        rDiv = (totalReserveA == 0) ? 0 : deltaA * EPoolLibrary.sFactorI / totalReserveA;
     }
 
     /**

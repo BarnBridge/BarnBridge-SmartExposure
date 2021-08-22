@@ -9,7 +9,7 @@ import '@nomiclabs/hardhat-waffle';
 import 'hardhat-gas-reporter'
 import 'hardhat-typechain';
 import 'solidity-coverage';
-import "@tenderly/hardhat-tenderly"
+import '@tenderly/hardhat-tenderly'
 
 import './tasks/clean';
 import './tasks/accounts';
@@ -27,11 +27,6 @@ import './tasks/contracts/EPoolPeriphery/issueForMaxTokenB';
 import './tasks/contracts/EPoolPeriphery/redeemForMinTokenA';
 import './tasks/contracts/EPoolPeriphery/redeemForMinTokenB';
 import './tasks/contracts/EPoolPeriphery/rebalanceWithFlashSwap';
-import './tasks/contracts/EPoolPeriphery/setMaxFlashSwapSlippage';
-import './tasks/contracts/KeeperNetworkAdapter/setKeeperRebalanceMinRDiv';
-import './tasks/contracts/KeeperNetworkAdapter/setKeeperRebalanceInterval';
-import './tasks/contracts/KeeperSubsidyPool/addSubsidy';
-import './tasks/contracts/KeeperSubsidyPool/setBeneficiary';
 import './tasks/contracts/ERC20/approve';
 
 const config: HardhatUserConfig = {
@@ -45,32 +40,35 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      chainId: 31337,
+      chainId: 1337,
       forking: {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        timeout: 50000,
         url: (process.env.PROVIDER_FORKING) ? process.env.PROVIDER_FORKING : '',
-        blockNumber: Number(process.env.BLOCKNUMBER),
-        enabled: (process.env.FORKING == "true") ? true : false
+        blockNumber: (process.env.BLOCKNUMBER) ? Number(process.env.BLOCKNUMBER) : 0,
+        enabled: (process.env.FORKING == 'true') ? true : false
       }
     },
     env_network: {
-      url: process.env.PROVIDER,
-      chainId: Number(process.env.CHAINID),
+      url: (process.env.PROVIDER) ? process.env.PROVIDER : '',
+      chainId: (process.env.CHAINID) ? Number(process.env.CHAINID) : undefined,
       accounts: {
         mnemonic: (process.env.MNEMONIC) ? process.env.MNEMONIC : '',
-        path: process.env.HD_PATH,
-        initialIndex: Number(process.env.HD_INITIAL),
-        count: Number(process.env.HD_COUNT),
+        path: "m/44'/60'/0'/0",
+        initialIndex: 0,
+        count: 20,
       },
-      gas: (process.env.GAS) ? Number(process.env.GAS) : "auto",
-      gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : "auto",
+      gas: (process.env.GAS) ? Number(process.env.GAS) : 'auto',
+      gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : 'auto',
       gasMultiplier: (process.env.GAS_MULTIPLIER) ? Number(process.env.GAS_MULTIPLIER) : 1
     },
     env_network_private_key: {
-      url: process.env.PROVIDER,
-      chainId: Number(process.env.CHAINID),
-      accounts: ['0x' + process.env.PRIVATE_KEY],
-      gas: (process.env.GAS) ? Number(process.env.GAS) : "auto",
-      gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : "auto",
+      url: (process.env.PROVIDER) ? process.env.PROVIDER : '',
+      chainId: (process.env.CHAINID) ? Number(process.env.CHAINID) : undefined,
+      accounts: (process.env.PRIVATE_KEY) ? ['0x' + process.env.PRIVATE_KEY] : [],
+      gas: (process.env.GAS) ? Number(process.env.GAS) : 'auto',
+      gasPrice: (process.env.GAS_PRICE) ? Number(process.env.GAS_PRICE) : 'auto',
       gasMultiplier: (process.env.GAS_MULTIPLIER) ? Number(process.env.GAS_MULTIPLIER) : 1
     }
   },
@@ -92,6 +90,9 @@ const config: HardhatUserConfig = {
   typechain: {
     outDir: 'typechain',
     target: 'ethers-v5',
+  },
+  mocha: {
+    timeout: 50000,
   }
 };
 

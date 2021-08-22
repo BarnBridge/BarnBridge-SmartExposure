@@ -24,16 +24,16 @@ describe('EPoolPeriphery', function () {
     it('should update the address of the controller if msg.sender is the dao', async function () {
       this.controller2 = (await deployContract(this.signers.admin, ControllerArtifact, [])) as Controller;
       await expect(
-        this.epp.connect(this.signers.dao).setController(this.controller2.address)
-      ).to.emit(this.epp, 'SetController').withArgs(this.controller2.address);
-      expect(await this.epp.connect(this.signers.dao).getController()).to.equal(this.controller2.address);
-      await this.epp.connect(this.signers.admin).setController(this.controller.address);
+        this.eppV3.connect(this.signers.dao).setController(this.controller2.address)
+      ).to.emit(this.eppV3, 'SetController').withArgs(this.controller2.address);
+      expect(await this.eppV3.connect(this.signers.dao).getController()).to.equal(this.controller2.address);
+      await this.eppV3.connect(this.signers.admin).setController(this.controller.address);
     });
 
     it('should fail updating the address of the controller if msg.sender is not the dao', async function () {
       this.controller2 = (await deployContract(this.signers.admin, ControllerArtifact, [])) as Controller;
       await expect(
-        this.epp.connect(this.signers.guardian).setController(this.controller2.address)
+        this.eppV3.connect(this.signers.guardian).setController(this.controller2.address)
       ).to.be.revertedWith('EPoolPeriphery: not dao');
     });
   });
@@ -41,30 +41,50 @@ describe('EPoolPeriphery', function () {
   describe('#setEPoolApproval', function () {
     it('should set the approval for an EPool to true if msg.sender is the dao', async function () {
       await expect(
-        this.epp.connect(this.signers.dao).setEPoolApproval(this.ep.address, true)
-      ).to.emit(this.epp, 'SetEPoolApproval').withArgs(this.ep.address, true);
-      expect(await this.epp.connect(this.signers.dao).ePools(this.ep.address)).to.equal(true);
-      assert((await this.tokenA.connect(this.signers.dao).allowance(this.epp.address, this.ep.address)).eq(ethers.constants.MaxUint256));
-      assert((await this.tokenB.connect(this.signers.dao).allowance(this.epp.address, this.ep.address)).eq(ethers.constants.MaxUint256));
+        this.eppV3.connect(this.signers.dao).setEPoolApproval(this.ep.address, true)
+      ).to.emit(this.eppV3, 'SetEPoolApproval').withArgs(this.ep.address, true);
+      expect(await this.eppV3.connect(this.signers.dao).ePools(this.ep.address)).to.equal(true);
+      assert((await this.tokenA.connect(this.signers.dao).allowance(this.eppV3.address, this.ep.address)).eq(ethers.constants.MaxUint256));
+      assert((await this.tokenB.connect(this.signers.dao).allowance(this.eppV3.address, this.ep.address)).eq(ethers.constants.MaxUint256));
     });
 
     it('should set the approval for an EPool to true if msg.sender is the guardian', async function () {
-      await this.epp.connect(this.signers.guardian).setEPoolApproval(this.ep.address, true);
-      expect(await this.epp.connect(this.signers.guardian).ePools(this.ep.address)).to.equal(true);
-      assert((await this.tokenA.connect(this.signers.guardian).allowance(this.epp.address, this.ep.address)).eq(ethers.constants.MaxUint256));
-      assert((await this.tokenB.connect(this.signers.guardian).allowance(this.epp.address, this.ep.address)).eq(ethers.constants.MaxUint256));
+      await this.eppV3.connect(this.signers.guardian).setEPoolApproval(this.ep.address, true);
+      expect(await this.eppV3.connect(this.signers.guardian).ePools(this.ep.address)).to.equal(true);
+      assert((await this.tokenA.connect(this.signers.guardian).allowance(this.eppV3.address, this.ep.address)).eq(ethers.constants.MaxUint256));
+      assert((await this.tokenB.connect(this.signers.guardian).allowance(this.eppV3.address, this.ep.address)).eq(ethers.constants.MaxUint256));
     });
 
     it('should set the approval for an EPool to false', async function () {
-      await this.epp.connect(this.signers.dao).setEPoolApproval(this.ep.address, false);
-      expect(await this.epp.connect(this.signers.dao).ePools(this.ep.address)).to.equal(false);
-      assert((await this.tokenA.connect(this.signers.dao).allowance(this.epp.address, this.ep.address)).eq(0));
-      assert((await this.tokenB.connect(this.signers.dao).allowance(this.epp.address, this.ep.address)).eq(0));
+      await this.eppV3.connect(this.signers.dao).setEPoolApproval(this.ep.address, false);
+      expect(await this.eppV3.connect(this.signers.dao).ePools(this.ep.address)).to.equal(false);
+      assert((await this.tokenA.connect(this.signers.dao).allowance(this.eppV3.address, this.ep.address)).eq(0));
+      assert((await this.tokenB.connect(this.signers.dao).allowance(this.eppV3.address, this.ep.address)).eq(0));
     });
 
     it('should fail setting the approval for an EPool if msg.sender is not the dao or guardian', async function () {
       await expect(
-        this.epp.connect(this.signers.user).setEPoolApproval(this.ep.address, true)
+        this.eppV3.connect(this.signers.user).setEPoolApproval(this.ep.address, true)
+      ).to.be.revertedWith('EPoolPeriphery: not dao or guardian');
+    });
+  });
+
+  describe('#setFeeTierPoolPair', function () {
+    it('should set fee tier for pair if msg.sender is the dao', async function () {
+      await expect(
+        this.eppV3.connect(this.signers.dao).setFeeTierForPair(this.tokenA.address, this.tokenB.address, 500)
+      ).to.emit(this.eppV3, 'SetFeeTierForPair').withArgs(this.tokenA.address, this.tokenB.address, 500);
+      expect(await this.eppV3.connect(this.signers.dao).feeTierForPair(this.tokenA.address, this.tokenB.address)).to.equal(500);
+    });
+
+    it('should set fee tier for pair if msg.sender is the guardian', async function () {
+      await this.eppV3.connect(this.signers.guardian).setFeeTierForPair(this.tokenA.address, this.tokenB.address, 3000);
+      expect(await this.eppV3.connect(this.signers.guardian).feeTierForPair(this.tokenA.address, this.tokenB.address)).to.equal(3000);
+    });
+
+    it('should fail setting fee tier for pair if msg.sender is not the dao or guardian', async function () {
+      await expect(
+        this.eppV3.connect(this.signers.user).setFeeTierForPair(this.tokenA.address, this.tokenB.address, 3000)
       ).to.be.revertedWith('EPoolPeriphery: not dao or guardian');
     });
   });
@@ -74,12 +94,14 @@ describe('EPoolPeriphery', function () {
       await signersFixture.bind(this)();
       await environmentFixture.bind(this)();
 
+      if (this.localRun) { this.skip(); }
+
       // approve TokenA and TokenB for EPoolPeriphery
       await Promise.all([
-        this.tokenA.connect(this.signers.admin).approve(this.epp.address, this.sFactorA.mul(2)),
-        this.tokenB.connect(this.signers.admin).approve(this.epp.address, this.sFactorB.mul(2)),
-        this.tokenA.connect(this.signers.user).approve(this.epp.address, this.sFactorA.mul(5000)),
-        this.tokenB.connect(this.signers.user).approve(this.epp.address, this.sFactorB.mul(5000))
+        this.tokenA.connect(this.signers.admin).approve(this.eppV3.address, this.sFactorA.mul(2)),
+        this.tokenB.connect(this.signers.admin).approve(this.eppV3.address, this.sFactorB.mul(2)),
+        this.tokenA.connect(this.signers.user).approve(this.eppV3.address, this.sFactorA.mul(5000)),
+        this.tokenB.connect(this.signers.user).approve(this.eppV3.address, this.sFactorB.mul(5000))
       ]);
 
       if (this.localRun || this.forking) {
@@ -201,27 +223,25 @@ describe('EPoolPeriphery', function () {
     describe('#issueForMaxTokenA', function () {
       it('should fail depositting into unapproved EPool', async function () {
         await expect(
-          this.epp.connect(this.signers.user).issueForMaxTokenA(this.epp.address, ethers.constants.AddressZero, 0, 0, this.deadline)
+          this.eppV3.connect(this.signers.user).issueForMaxTokenA(this.eppV3.address, ethers.constants.AddressZero, 0, 0, this.deadline)
         ).to.be.revertedWith('EPoolPeriphery: unapproved EPool');
       });
 
       it('should fail depositting into tranche for insufficient max. input', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         const [amountA, amountB] = await this.eph.connect(this.signers.user).tokenATokenBForTokenA(this.ep.address, tranche.eToken, this.amountA);
-        let eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
+        const eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
         if (!this.localRun) {
-          // compensate for rate deviations
-          eTokenAmountIssued = eTokenAmountIssued.div(10);
-          const minAmountA = await this.epp.connect(this.signers.user).minInputAmountAForEToken(this.ep.address, tranche.eToken, eTokenAmountIssued);
-          await this.epp.connect(this.signers.user).eTokenForMinInputAmountA_Unsafe(this.ep.address, tranche.eToken, minAmountA);
+          const minAmountA = await this.eppV3.connect(this.signers.user).callStatic.minInputAmountAForEToken(this.ep.address, tranche.eToken, eTokenAmountIssued);
+          await this.eppV3.connect(this.signers.user).eTokenForMinInputAmountA_Unsafe(this.ep.address, tranche.eToken, minAmountA);
           await expect(
-            this.epp.connect(this.signers.user).issueForMaxTokenA(
+            this.eppV3.connect(this.signers.user).issueForMaxTokenA(
               this.ep.address, tranche.eToken, eTokenAmountIssued, minAmountA.sub(1), this.deadline
             )
-          ).to.be.revertedWith('UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
+          ).to.be.revertedWith('STF');
         } else {
           await expect(
-            this.epp.connect(this.signers.user).issueForMaxTokenA(
+            this.eppV3.connect(this.signers.user).issueForMaxTokenA(
               this.ep.address, tranche.eToken, eTokenAmountIssued, 0, this.deadline
             )
           ).to.be.revertedWith('EPoolPeriphery: insufficient max. input');
@@ -231,16 +251,14 @@ describe('EPoolPeriphery', function () {
       it('should deposit into tranche', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         const [amountA, amountB] = await this.eph.connect(this.signers.user).tokenATokenBForTokenA(this.ep.address, tranche.eToken, this.amountA);
-        let eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
+        const eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
         if (!this.localRun) {
-          // compensate for rate deviation
-          eTokenAmountIssued = eTokenAmountIssued.div(10);
-          const minAmountA = await this.epp.connect(this.signers.user).minInputAmountAForEToken(this.ep.address, tranche.eToken, eTokenAmountIssued);
-          await this.epp.connect(this.signers.user).issueForMaxTokenA(
+          const minAmountA = await this.eppV3.connect(this.signers.user).callStatic.minInputAmountAForEToken(this.ep.address, tranche.eToken, eTokenAmountIssued);
+          await this.eppV3.connect(this.signers.user).issueForMaxTokenA(
             this.ep.address, tranche.eToken, eTokenAmountIssued, minAmountA, this.deadline
           );
         } else {
-          await this.epp.connect(this.signers.user).issueForMaxTokenA(
+          await this.eppV3.connect(this.signers.user).issueForMaxTokenA(
             this.ep.address, tranche.eToken, eTokenAmountIssued, this.amountA, this.deadline
           );
         }
@@ -282,7 +300,7 @@ describe('EPoolPeriphery', function () {
     describe('#rebalanceWithFlashSwap', function () {
       it('should fail rebalancing an unapproved EPool', async function () {
         await expect(
-          this.epp.connect(this.signers.user).rebalanceWithFlashSwap(this.epp.address, 0)
+          this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.eppV3.address, 0)
         ).to.be.revertedWith('EPoolPeriphery: unapproved EPool');
       });
 
@@ -294,7 +312,7 @@ describe('EPoolPeriphery', function () {
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
         await expect(
           // -10% slippage
-          this.epp.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, ethers.utils.parseUnits('0.9', 18))
+          this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, ethers.utils.parseUnits('0.9', 18))
         ).to.be.revertedWith('EPoolPeriphery: excessive slippage');
       });
 
@@ -305,7 +323,7 @@ describe('EPoolPeriphery', function () {
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
         // 10% slippage
-        await this.epp.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, ethers.utils.parseUnits('1.1', 18));
+        await this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, ethers.utils.parseUnits('1.1', 18));
         const currentRatioBalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(currentRatioUnbalanced, currentRatioBalanced));
         assert(this.roundEqual(currentRatioBalanced, tranche.targetRatio));
@@ -326,7 +344,7 @@ describe('EPoolPeriphery', function () {
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
         // 10% slippage
-        await this.epp.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, ethers.utils.parseUnits('1.1', 18));
+        await this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, ethers.utils.parseUnits('1.1', 18));
         const currentRatioBalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(currentRatioUnbalanced, currentRatioBalanced));
         assert(this.roundEqual(currentRatioBalanced, tranche.targetRatio));
@@ -344,25 +362,24 @@ describe('EPoolPeriphery', function () {
     describe('#redeemForMinTokenA', function () {
       it('should fail withdrawing from an unapproved EPool', async function () {
         await expect(
-          this.epp.connect(this.signers.user).redeemForMinTokenA(this.epp.address, ethers.constants.AddressZero, 0, 0, this.deadline)
+          this.eppV3.connect(this.signers.user).redeemForMinTokenA(this.eppV3.address, ethers.constants.AddressZero, 0, 0, this.deadline)
         ).to.be.revertedWith('EPoolPeriphery: unapproved EPool');
       });
 
       it('should fail withdrawing from tranche if output amount is not met', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         const balanceOf = await this.eToken.connect(this.signers.user).balanceOf(await this.signers.user.getAddress());
-        await this.eToken.connect(this.signers.user).approve(this.epp.address, balanceOf);
+        await this.eToken.connect(this.signers.user).approve(this.eppV3.address, balanceOf);
         if (!this.localRun) {
-          // compensate for rate deviation
-          const minOutputA = await this.epp.connect(this.signers.user).maxOutputAmountAForEToken(this.ep.address, tranche.eToken, balanceOf);
+          const minOutputA = await this.eppV3.connect(this.signers.user).callStatic.maxOutputAmountAForEToken(this.ep.address, tranche.eToken, balanceOf);
           await expect(
-            this.epp.connect(this.signers.user).redeemForMinTokenA(
+            this.eppV3.connect(this.signers.user).redeemForMinTokenA(
               this.ep.address, tranche.eToken, balanceOf, minOutputA.add(1), this.deadline
             )
           ).to.be.revertedWith('EPoolPeriphery: insufficient output amount');
         } else {
           await expect(
-            this.epp.connect(this.signers.user).redeemForMinTokenA(
+            this.eppV3.connect(this.signers.user).redeemForMinTokenA(
               this.ep.address, tranche.eToken, balanceOf, ethers.constants.MaxUint256, this.deadline
             )
           ).to.be.revertedWith('EPoolPeriphery: insufficient output amount');
@@ -372,17 +389,16 @@ describe('EPoolPeriphery', function () {
       it('should withdraw from tranche', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         const balanceOf = await this.eToken.connect(this.signers.user).balanceOf(await this.signers.user.getAddress());
-        await this.eToken.connect(this.signers.user).approve(this.epp.address, balanceOf );
+        await this.eToken.connect(this.signers.user).approve(this.eppV3.address, balanceOf );
         if (!this.localRun) {
-          // compensate for rate deviation
-          const minOutputA = await this.epp.connect(this.signers.user).maxOutputAmountAForEToken(this.ep.address, tranche.eToken, balanceOf);
-          await this.epp.connect(this.signers.user).redeemForMinTokenA(
+          const minOutputA = await this.eppV3.connect(this.signers.user).callStatic.maxOutputAmountAForEToken(this.ep.address, tranche.eToken, balanceOf);
+          await this.eppV3.connect(this.signers.user).redeemForMinTokenA(
             this.ep.address, tranche.eToken, balanceOf, minOutputA, this.deadline
           );
         } else {
           // ideal: no fees, no price impact
           const minOutputA = this.amountA.sub(1).mul(this.sFactorB).div(this.sFactorA).mul(this.sFactorA).div(this.sFactorB);
-          await this.epp.connect(this.signers.user).redeemForMinTokenA(
+          await this.eppV3.connect(this.signers.user).redeemForMinTokenA(
             this.ep.address, tranche.eToken, balanceOf, minOutputA, this.deadline
           );
         }
@@ -422,19 +438,17 @@ describe('EPoolPeriphery', function () {
       it('should deposit into tranche', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         const [amountA, amountB] = await this.eph.connect(this.signers.user).tokenATokenBForTokenB(this.ep.address, tranche.eToken, this.amountB);
-        let eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
+        const eTokenAmountIssued = await this.eph.connect(this.signers.user).eTokenForTokenATokenB(this.ep.address, tranche.eToken, amountA, amountB);
         const balanceOf = await this.eToken.connect(this.signers.user).balanceOf(await this.signers.user.getAddress());
         if (!this.localRun) {
-          // compensate for rate deviation
-          eTokenAmountIssued = eTokenAmountIssued.div(10);
-          const minAmountB = await this.epp.connect(this.signers.user).minInputAmountBForEToken(this.ep.address, tranche.eToken, eTokenAmountIssued);
-          await this.epp.connect(this.signers.user).eTokenForMinInputAmountB_Unsafe(this.ep.address, tranche.eToken, minAmountB);
-          await this.epp.connect(this.signers.user).issueForMaxTokenB(
+          const minAmountB = await this.eppV3.connect(this.signers.user).callStatic.minInputAmountBForEToken(this.ep.address, tranche.eToken, eTokenAmountIssued);
+          await this.eppV3.connect(this.signers.user).eTokenForMinInputAmountB_Unsafe(this.ep.address, tranche.eToken, minAmountB);
+          await this.eppV3.connect(this.signers.user).issueForMaxTokenB(
             this.ep.address, tranche.eToken, eTokenAmountIssued, minAmountB, this.deadline
           );
         } else {
-          await this.epp.connect(this.signers.user).eTokenForMinInputAmountB_Unsafe(this.ep.address, tranche.eToken, this.amountB);
-          await this.epp.connect(this.signers.user).issueForMaxTokenB(
+          await this.eppV3.connect(this.signers.user).eTokenForMinInputAmountB_Unsafe(this.ep.address, tranche.eToken, this.amountB);
+          await this.eppV3.connect(this.signers.user).issueForMaxTokenB(
             this.ep.address, tranche.eToken, eTokenAmountIssued, this.amountB, this.deadline
           );
         }
@@ -454,17 +468,16 @@ describe('EPoolPeriphery', function () {
       it('should withdraw from tranche', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         const balanceOf = await this.eToken.connect(this.signers.user).balanceOf(await this.signers.user.getAddress());
-        await this.eToken.connect(this.signers.user).approve(this.epp.address, balanceOf);
+        await this.eToken.connect(this.signers.user).approve(this.eppV3.address, balanceOf);
         if (!this.localRun) {
-          // compensate for rate deviation
-          const minOutputB = await this.epp.connect(this.signers.user).maxOutputAmountBForEToken(this.ep.address, tranche.eToken, balanceOf);
-          await this.epp.connect(this.signers.user).redeemForMinTokenB(
+          const minOutputB = await this.eppV3.connect(this.signers.user).callStatic.maxOutputAmountBForEToken(this.ep.address, tranche.eToken, balanceOf);
+          await this.eppV3.connect(this.signers.user).redeemForMinTokenB(
             this.ep.address, tranche.eToken, balanceOf, minOutputB, this.deadline
           );
         } else {
           // ideal: no fees, no price impact
           const minOutputB = this.amountB.sub(100); // compensate for rounding error
-          await this.epp.connect(this.signers.user).redeemForMinTokenB(
+          await this.eppV3.connect(this.signers.user).redeemForMinTokenB(
             this.ep.address, tranche.eToken, balanceOf, minOutputB, this.deadline
           );
         }
@@ -484,12 +497,12 @@ describe('EPoolPeriphery', function () {
     describe('#recover', function () {
       it('should recover excess funds', async function () {
         const amount = '1';
-        await this.tokenX.connect(this.signers.admin).transfer(this.epp.address, parseUnits(amount, this.decX));
+        await this.tokenX.connect(this.signers.admin).transfer(this.eppV3.address, parseUnits(amount, this.decX));
         const balanceOfXDao = await this.tokenX.connect(this.signers.user).balanceOf(this.accounts.dao);
-        const balanceOfXEPoolPeriphery = await this.tokenX.connect(this.signers.user).balanceOf(this.epp.address);
+        const balanceOfXEPoolPeriphery = await this.tokenX.connect(this.signers.user).balanceOf(this.eppV3.address);
         await expect(
-          this.epp.connect(this.signers.dao).recover(this.tokenX.address, parseUnits(amount, this.decX))
-        ).to.emit(this.epp, 'RecoveredToken').withArgs(this.tokenX.address, parseUnits(amount, this.decX));
+          this.eppV3.connect(this.signers.dao).recover(this.tokenX.address, parseUnits(amount, this.decX))
+        ).to.emit(this.eppV3, 'RecoveredToken').withArgs(this.tokenX.address, parseUnits(amount, this.decX));
         const _balanceOfXDao = await this.tokenX.connect(this.signers.user).balanceOf(this.accounts.dao);
         const _balanceOfXEPoolPeriphery = await this.tokenX.connect(this.signers.user).balanceOf(this.ep.address);
         assert(_balanceOfXDao.sub(balanceOfXDao).eq(parseUnits(amount, this.decX)));

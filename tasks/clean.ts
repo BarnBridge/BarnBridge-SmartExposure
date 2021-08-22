@@ -7,7 +7,6 @@ task(TASK_CLEAN, 'Overrides the standard clean task', async function (_taskArgs,
   await fsExtra.remove('./cache');
   await fsExtra.remove('./coverage');
   await fsExtra.remove('./coverage.json');
-  await fsExtra.remove('./dist');
   if (config.typechain?.outDir) {
     await fsExtra.remove(config.typechain.outDir);
   }

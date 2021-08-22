@@ -34,10 +34,14 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     mapping(address => Tranche) public tranches;
     address[] public tranchesByIndex;
 
-    // rebalancing strategy
+    // mode by which to trigger rebalancing
+    // 0 := rDiv >= minRDiv OR block.timestamp >= lastRebalance + interval
+    // 1 := rDiv >= minRDiv AND block.timestamp >= lastRebalance + interval
+    uint256 public override rebalanceMode;
+    // min. deviation from target ratio
     uint256 public override rebalanceMinRDiv;
+    // interval in seconds between rebalances
     uint256 public override rebalanceInterval;
-    uint256 public override lastRebalance;
 
     // fees
     uint256 public override feeRate;
@@ -45,10 +49,11 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     uint256 public override cumulativeFeeB;
 
     event AddedTranche(address indexed eToken);
-    event RebalancedTranches(uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv);
+    event RebalancedTranche(address indexed eToken, uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv);
     event IssuedEToken(address indexed eToken, uint256 amount, uint256 amountA, uint256 amountB, address user);
     event RedeemedEToken(address indexed eToken, uint256 amount, uint256 amountA, uint256 amountB, address user);
-    event SetMinRDiv(uint256 minRDiv);
+    event SetRebalanceMode(uint256 rebalanceMode);
+    event SetRebalanceMinRDiv(uint256 minRDiv);
     event SetRebalanceInterval(uint256 interval);
     event SetFeeRate(uint256 feeRate);
     event TransferFees(address indexed feesOwner, uint256 cumulativeFeeA, uint256 cumulativeFeeB);
@@ -77,8 +82,8 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     }
 
     /**
-     * @notice Returns the address of the current Aggregator which provides the exchange rate between TokenA and TokenB
-     * @return Address of aggregator
+     * @notice Returns the address of the Controller
+     * @return Address of Controller
      */
     function getController() external view override returns (address) {
         return address(controller);
@@ -128,16 +133,30 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     }
 
     /**
+     * @notice Set rebalancing mode required for triggering a rebalance. See rebalanceMode definition.
+     * @dev Can only be called by an authorized sender
+     * @param mode mode (0 for OR, 1 for AND)
+     * @return True on success
+     */
+    function setRebalanceMode(
+        uint256 mode
+    ) external override onlyDao("EPool: not dao") returns (bool) {
+        rebalanceMode = mode;
+        emit SetRebalanceMode(mode);
+        return true;
+    }
+
+    /**
      * @notice Set min. deviation (in percentage scaled by 1e18) required for triggering a rebalance
      * @dev Can only be called by an authorized sender
      * @param minRDiv min. ratio deviation
      * @return True on success
      */
-    function setMinRDiv(
+    function setRebalanceMinRDiv(
         uint256 minRDiv
-    ) external onlyDao("EPool: not dao") returns (bool) {
+    ) external override onlyDao("EPool: not dao") returns (bool) {
         rebalanceMinRDiv = minRDiv;
-        emit SetMinRDiv(minRDiv);
+        emit SetRebalanceMinRDiv(minRDiv);
         return true;
     }
 
@@ -149,7 +168,7 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
      */
     function setRebalanceInterval(
         uint256 interval
-    ) external onlyDao("EPool: not dao") returns (bool) {
+    ) external override onlyDao("EPool: not dao") returns (bool) {
         rebalanceInterval = interval;
         emit SetRebalanceInterval(interval);
         return true;
@@ -173,11 +192,13 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
      * @return True on success
      */
     function transferFees() external override returns (bool) {
+        address feesOwner = controller.feesOwner();
+        require(feesOwner != address(0), "EPool: no feesOwner");
         (uint256 _cumulativeFeeA, uint256 _cumulativeFeeB) = (cumulativeFeeA, cumulativeFeeB);
         (cumulativeFeeA, cumulativeFeeB) = (0, 0);
-        tokenA.safeTransfer(controller.feesOwner(), _cumulativeFeeA);
-        tokenB.safeTransfer(controller.feesOwner(), _cumulativeFeeB);
-        emit TransferFees(controller.feesOwner(), _cumulativeFeeA, _cumulativeFeeB);
+        tokenA.safeTransfer(feesOwner, _cumulativeFeeA);
+        tokenB.safeTransfer(feesOwner, _cumulativeFeeB);
+        emit TransferFees(feesOwner, _cumulativeFeeA, _cumulativeFeeB);
         return true;
     }
 
@@ -217,78 +238,71 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
         require(tranchesByIndex.length < TRANCHE_LIMIT, "EPool: max. tranche count");
         require(targetRatio != 0, "EPool: targetRatio == 0");
         IEToken eToken = eTokenFactory.createEToken(eTokenName, eTokenSymbol);
-        tranches[address(eToken)] = Tranche(eToken, 10**eToken.decimals(), 0, 0, targetRatio);
+        tranches[address(eToken)] = Tranche(eToken, 10**eToken.decimals(), 0, 0, targetRatio, 0);
         tranchesByIndex.push(address(eToken));
         emit AddedTranche(address(eToken));
         return true;
     }
 
-    function _trancheDelta(
-        Tranche storage t, uint256 fracDelta
-    ) internal view returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
-        uint256 rate = _rate();
-        (uint256 _deltaA, uint256 _deltaB, uint256 _rChange) = EPoolLibrary.trancheDelta(
-            t, rate, sFactorA, sFactorB
-        );
-        (deltaA, deltaB, rChange) = (
-            fracDelta * _deltaA / EPoolLibrary.sFactorI, fracDelta * _deltaB / EPoolLibrary.sFactorI, _rChange
-        );
+    function _rebalanceTranche(
+        Tranche storage t, uint256 rate
+    ) internal returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
+        (deltaA, deltaB, rChange, rDiv) = EPoolLibrary.trancheDelta(t, rate, sFactorA, sFactorB);
+        (bool deviated, bool bided) = (rDiv >= rebalanceMinRDiv, block.timestamp >= t.rebalancedAt + rebalanceInterval);
+        if (
+            // skip if condition of rebalanceMode 0 wasn't met
+            rebalanceMode == 0 && !(deviated || bided)
+            // skip if condition of rebalanceMode 1 wasn't met
+            || rebalanceMode == 1 && !(deviated && bided)
+            // skip if deltas are close to 0 --> avoid rebalancing of dust
+            || (deltaA == 0 || deltaB == 0)
+        ) {
+            return (0, 0, 0, 0);
+        }
+        if (rChange == 0) {
+            (t.reserveA, t.reserveB) = (t.reserveA - deltaA, t.reserveB + deltaB);
+        } else {
+            (t.reserveA, t.reserveB) = (t.reserveA + deltaA, t.reserveB - deltaB);
+        }
+        t.rebalancedAt = block.timestamp;
+        emit RebalancedTranche(address(t.eToken), deltaA, deltaB, rChange, rDiv);
     }
 
     /**
      * @notice Rebalances all tranches based on the current rate
+     * @dev Can be overriden by contract inherting from EPool and implementing custom logic for rebalancing
+     * @return deltaA Summed rebalanced delta of all tranches reserveA
+     * @return deltaB Summed rebalanced delta of all tranches reserveB
+     * @return rChange 0 - for deltaA <= 0 and deltaB >= 0, 1 - for deltaA > 0 and deltaB < 0
      */
-    function _rebalanceTranches(
-        uint256 fracDelta
-    ) internal returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
-        require(fracDelta <= EPoolLibrary.sFactorI, "EPool: fracDelta > 1.0");
-        uint256 totalReserveA;
+    function rebalance() external virtual override returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
+        uint256 rate = _rate();
         int256 totalDeltaA;
         int256 totalDeltaB;
         for (uint256 i = 0; i < tranchesByIndex.length; i++) {
-            Tranche storage t = tranches[tranchesByIndex[i]];
-            totalReserveA += t.reserveA;
-            (uint256 _deltaA, uint256 _deltaB, uint256 _rChange) = _trancheDelta(t, fracDelta);
+            (uint256 _deltaA, uint256 _deltaB, uint256 _rChange,) = _rebalanceTranche(
+                tranches[tranchesByIndex[i]], rate
+            );
             if (_rChange == 0) {
-                (t.reserveA, t.reserveB) = (t.reserveA - _deltaA, t.reserveB + _deltaB);
                 (totalDeltaA, totalDeltaB) = (totalDeltaA - int256(_deltaA), totalDeltaB + int256(_deltaB));
             } else {
-                (t.reserveA, t.reserveB) = (t.reserveA + _deltaA, t.reserveB - _deltaB);
                 (totalDeltaA, totalDeltaB) = (totalDeltaA + int256(_deltaA), totalDeltaB - int256(_deltaB));
             }
         }
         if (totalDeltaA > 0 && totalDeltaB < 0)  {
             (deltaA, deltaB, rChange) = (uint256(totalDeltaA), uint256(-totalDeltaB), 1);
-        } else if (totalDeltaA < 0 && totalDeltaB > 0) {
-            (deltaA, deltaB, rChange) = (uint256(-totalDeltaA), uint256(totalDeltaB), 0);
-        }
-        rDiv = (totalReserveA == 0) ? 0 : deltaA * EPoolLibrary.sFactorI / totalReserveA;
-        emit RebalancedTranches(deltaA, deltaB, rChange, rDiv);
-    }
-
-    /**
-     * @notice Rebalances all tranches based on the current rate
-     * @dev Can be overriden contract inherting EPool for custom logic during rebalancing
-     * @param fracDelta Fraction of the delta of deltaA or deltaB to rebalance
-     * @return deltaA Rebalanced delta of reserveA
-     * @return deltaB Rebalanced delta of reserveB
-     * @return rChange 0 for deltaA <= 0 and deltaB >= 0, 1 for deltaA > 0 and deltaB < 0 (trancheDelta method)
-     * @return rDiv Deviation from target in percentage (1e18)
-     */
-    function rebalance(
-        uint256 fracDelta
-    ) external virtual override returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
-        (deltaA, deltaB, rChange, rDiv) = _rebalanceTranches(fracDelta);
-        require(rDiv >= rebalanceMinRDiv, "EPool: minRDiv not met");
-        require(block.timestamp >= lastRebalance + rebalanceInterval, "EPool: within interval");
-        lastRebalance = block.timestamp;
-        if (rChange == 0) {
-            tokenA.safeTransfer(msg.sender, deltaA);
-            tokenB.safeTransferFrom(msg.sender, address(this), deltaB);
-        } else {
             tokenA.safeTransferFrom(msg.sender, address(this), deltaA);
             tokenB.safeTransfer(msg.sender, deltaB);
+            return (deltaA, deltaB, rChange);
+        } else if (totalDeltaA < 0 && totalDeltaB > 0) {
+            (deltaA, deltaB, rChange) = (uint256(-totalDeltaA), uint256(totalDeltaB), 0);
+            tokenA.safeTransfer(msg.sender, deltaA);
+            tokenB.safeTransferFrom(msg.sender, address(this), deltaB);
+            return (deltaA, deltaB, rChange);
+        } else if (totalDeltaA == 0 && totalDeltaB == 0) {
+            return (deltaA, deltaB, rChange);
         }
+        revert("EPool: dusty rebalance");
     }
 
     /**

@@ -13,6 +13,7 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
 .addParam('ePool', 'Address of EPool')
 .addParam('ePoolHelper', 'Address of EPoolHelper')
 .addParam('ePoolPeriphery', 'Address of EPoolPeriphery')
+.addParam('maxSlippage', 'Max. allowed slippage between EPool oracle and uniswap when executing a flash swap. 1.0e18 is defined as no slippage, 1.03e18 == 3% slippage, if < 1.0e18 then swap always has to make a profit')
 .setAction(async function (_taskArgs: any, hre) {
   const { ethers, artifacts } = hre;
   const admin: Signer = (await ethers.getSigners())[0];
@@ -20,35 +21,48 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
   const ePool = new ethers.Contract(_taskArgs.ePool, artifacts.readArtifactSync('EPool').abi) as EPool;
   const ePoolHelper = new ethers.Contract(_taskArgs.ePoolHelper, artifacts.readArtifactSync('EPoolHelper').abi) as EPoolHelper;
   const ePoolPeriphery = new ethers.Contract(_taskArgs.ePoolPeriphery, artifacts.readArtifactSync('EPoolPeriphery').abi) as EPoolPeriphery;
+  const tranches = await ePool.connect(admin).getTranches();
   const rate = await ePool.connect(admin).getRate();
   const tokenA = new ethers.Contract(await ePool.connect(admin).tokenA(), artifacts.readArtifactSync('TestERC20').abi) as TestERC20;
   const tokenB = new ethers.Contract(await ePool.connect(admin).tokenB(), artifacts.readArtifactSync('TestERC20').abi) as TestERC20;
+  const rebalanceMode = await ePool.connect(admin).rebalanceMode();
+  const rebalanceMinRDiv = await ePool.connect(admin).rebalanceMinRDiv();
+  const rebalanceInterval = await ePool.connect(admin).rebalanceInterval();
   const balanceA = await tokenA.connect(admin).balanceOf(await admin.getAddress());
   const balanceB = await tokenB.connect(admin).balanceOf(await admin.getAddress());
   console.log(`balanceA:         ${balanceA.toString()}`);
   console.log(`balanceB:         ${balanceB.toString()}`);
-  const [deltaA, deltaB, rChange, rDiv] = await ePoolHelper.connect(admin).delta(_taskArgs.ePool);
+  let shouldRebalance = false;
+  for (const tranche of tranches) {
+    const [deltaA, deltaB, rChange, rDiv] = await ePoolHelper.connect(admin).trancheDelta(_taskArgs.ePool, tranche.eToken);
+    console.log(`Estimated Rebalance on Tranche:`);
+    console.log(`  tranche:        ${tranche.eToken}`);
+    console.log(`  deltaA:         ${deltaA.toString() + ((rChange.gt(0)) ? ' to add' : ' to release')}`);
+    console.log(`  deltaB:         ${deltaB.toString() + ((rChange.gt(0)) ? ' to release' : ' to add')}`);
+    console.log(`  rDiv:           ${rDiv}`);
+    console.log(`  rebalancedAt:   ${tranche.rebalancedAt}`);
+    const deviated = rDiv.gte(rebalanceMinRDiv);
+    const currentTimestamp = ethers.BigNumber.from(Math.round(new Date().getTime() / 1000));
+    const nextRebalanceTimestamp = tranche.rebalancedAt.add(rebalanceInterval);
+    const scheduled = currentTimestamp.lt(nextRebalanceTimestamp);
+    if (rebalanceMode.eq(0) && (deviated || scheduled)) {
+      shouldRebalance = true;
+    } else if (rebalanceMode.eq(1) && (deviated && scheduled)) {
+      shouldRebalance = true;
+    }
+  }
+  const [deltaA, deltaB, rChange] = await ePoolHelper.connect(admin).delta(_taskArgs.ePool);
   console.log(`Estimated Rebalance:`);
-  console.log(`  rDiv:           ${rDiv.toString()}`);
-  console.log(`  deltaA:         ${deltaA.toString() + ((rChange.gt(0)) ? ' to add' : ' to release')}`);
-  console.log(`  deltaB:         ${deltaB.toString() + ((rChange.gt(0)) ? ' to release' : ' to add')}`);
-  console.log(`  rate:           ${rate.toString()}`);
+  console.log(`  totalDeltaA:      ${deltaA.toString() + ((rChange.gt(0)) ? ' to add' : ' to release')}`);
+  console.log(`  totalDeltaB:      ${deltaB.toString() + ((rChange.gt(0)) ? ' to release' : ' to add')}`);
+  console.log(`  rate:             ${rate.toString()}`);
 
-  const lastRebalance = await ePool.connect(admin).lastRebalance();
-  const rebalanceInterval = await ePool.connect(admin).rebalanceInterval();
-  const rebalanceMinRDiv = await ePool.connect(admin).rebalanceMinRDiv();
-  const currentTimestamp = ethers.BigNumber.from(Math.round(new Date().getTime() / 1000));
-  const nextRebalanceTimestamp = lastRebalance.add(rebalanceInterval);
+  if (shouldRebalance == false) {
+    console.log('No rebalance required');
+    return;
+  }
   if (deltaA.eq(0) || deltaB.eq(0)) {
     console.log(`Delt is zero. Nothing to rebalance.`);
-    return;
-  }
-  if (rDiv.lt(rebalanceMinRDiv)) {
-    console.log(`Min. ratio deviation of ${rebalanceMinRDiv.toString()} not met.`);
-    return;
-  }
-  if (currentTimestamp.lt(nextRebalanceTimestamp)) {
-    console.log(`Next rebalance possible after ${nextRebalanceTimestamp.toString()} (current: ${currentTimestamp.toString()}).`);
     return;
   }
 
@@ -68,13 +82,13 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
     return;
   }
   const tx_rebalance = await ePoolPeriphery.connect(admin).rebalanceWithFlashSwap(
-    ePool.address, ethers.utils.parseUnits('1', 18), { gasLimit: 500000, gasPrice: gasPrice }
+    ePool.address, _taskArgs.maxSlippage,{ gasLimit: 500000, gasPrice: gasPrice }
   );
   console.log(`EPoolPeriphery.rebalanceAllWithFlashSwap:`);
   console.log(`  Est. Gas:       ${gas.toString()}`);
   console.log(`  TxHash:         ${tx_rebalance.hash}`);
   const receipt = await tx_rebalance.wait();
-  const RebalanceEvent = new ethers.utils.Interface([ePool.interface.getEvent('RebalancedTranches')]);
+  const RebalanceEvent = new ethers.utils.Interface([ePool.interface.getEvent('RebalancedTranche')]);
   receipt.events?.forEach((event: any) => {
     try {
       const result = RebalanceEvent.parseLog(event);

@@ -22,7 +22,7 @@ describe('Controller', function () {
     it('should return true for the address dao', async function () {
       assert(await this.controller.connect(this.signers.dao).isDaoOrGuardian(this.accounts.dao));
     });
-    
+
     it('should return true for the address guardian', async function () {
       assert(await this.controller.connect(this.signers.guardian).isDaoOrGuardian(this.accounts.guardian));
     });
@@ -39,7 +39,7 @@ describe('Controller', function () {
       ).to.emit(this.controller, 'SetDao').withArgs(this.accounts.admin);
       expect(await this.controller.connect(this.signers.admin).dao()).to.equal(this.accounts.admin);
     });
-    
+
     it('should not set a new dao if msg.sender is the guardian', async function () {
       await expect(
         this.controller.connect(this.signers.guardian).setDao(this.accounts.admin)
@@ -60,7 +60,7 @@ describe('Controller', function () {
       ).to.emit(this.controller, 'SetGuardian').withArgs(this.accounts.admin);
       expect(await this.controller.connect(this.signers.admin).guardian()).to.equal(this.accounts.admin);
     });
-    
+
     it('should not set a new guardian if msg.sender is the guardian', async function () {
       await expect(
         this.controller.connect(this.signers.guardian).setGuardian(this.accounts.admin)
@@ -81,7 +81,7 @@ describe('Controller', function () {
       ).to.emit(this.controller, 'SetFeesOwner').withArgs(this.accounts.feesOwner);
       expect(await this.controller.connect(this.signers.feesOwner).feesOwner()).to.equal(this.accounts.feesOwner);
     });
-    
+
     it('should not set a new feesOwner if msg.sender is the guardian', async function () {
       await expect(
         this.controller.connect(this.signers.guardian).setFeesOwner(this.accounts.feesOwner)
@@ -102,7 +102,7 @@ describe('Controller', function () {
       ).to.emit(this.controller, 'SetPausedIssuance').withArgs(true);
       assert(await this.controller.connect(this.signers.dao).pausedIssuance());
     });
-    
+
     it('should set pausedIssuance if msg.sender is the guardian', async function () {
       await this.controller.connect(this.signers.guardian).setPausedIssuance(true);
       assert(await this.controller.connect(this.signers.guardian).pausedIssuance());

@@ -13,9 +13,16 @@ contract EPoolHelper is IEPoolHelper {
         return EPoolLibrary.currentRatio(ePool.getTranche(eToken), ePool.getRate(), ePool.sFactorA(), ePool.sFactorB());
     }
 
+    function trancheDelta(
+        IEPool ePool,
+        address eToken
+    ) external view override returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
+        return EPoolLibrary.trancheDelta(ePool.getTranche(eToken), ePool.getRate(), ePool.sFactorA(), ePool.sFactorB());
+    }
+
     function delta(
         IEPool ePool
-    ) external view override returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
+    ) external view override returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
         return EPoolLibrary.delta(ePool.getTranches(), ePool.getRate(), ePool.sFactorA(), ePool.sFactorB());
     }
 
